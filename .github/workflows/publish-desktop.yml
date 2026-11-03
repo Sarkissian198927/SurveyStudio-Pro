@@ -1,0 +1,33 @@
+name: Publish verified Windows installers
+on:
+  push:
+    branches: ['release/publish-desktop-0.4.0']
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-desktop-0.4.0
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BUILD_RUN_ID: '41695684178'
+      BUILD_COMMIT: '350d2ec38bda9f87ea6fcc3a71f1327dae4144a1'
+      RELEASE_TAG: v0.4.0-preview.1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: '41695684178'
+          name: SurveyStudio-Pro-0.4.0-Windows-x64
+          path: artifacts/raw
+      - name: Verify source, checksums and files; upload and publish release
+        run: node scripts/publish-desktop.cjs
