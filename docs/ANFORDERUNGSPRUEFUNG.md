@@ -1,6 +1,6 @@
 # Anforderungsprüfung – SurveyStudio Pro
 
-Stand: 03.11.2026. Quelle: `SurveyStudio_Pro_Pflichtenheft_v1_0.docx`, Version 1.0. Der aktuelle Nutzerauftrag erweitert die ursprünglich auf I-01 begrenzte Arbeit auf Fehlerbehebung und Integration der Funktionen. Der folgende Abgleich dokumentiert den Ausgangsstand. Der anschließende Auftrag erlaubt ausdrücklich eine GitHub-Desktopbereitstellung; deren historische Änderungen und Prüfungen stehen in [DESKTOP_0_4_0.md](DESKTOP_0_4_0.md). Die erneute Bedienungsprüfung und Version 0.5 sind in [DESKTOP_0_5_0.md](DESKTOP_0_5_0.md) dokumentiert; dessen Windows-Nachweis steht im jeweiligen Release-Manifest.
+Stand: 03.11.2026. Quelle: `SurveyStudio_Pro_Pflichtenheft_v1_0.docx`, Version 1.0. Der aktuelle Nutzerauftrag erweitert die ursprünglich auf I-01 begrenzte Arbeit auf Fehlerbehebung und Integration der Funktionen. Der folgende Abgleich dokumentiert den Ausgangsstand und die ausdrücklich benannten Nachträge. Der anschließende Auftrag erlaubt ausdrücklich eine GitHub-Desktopbereitstellung; deren historische Änderungen und Prüfungen stehen in [DESKTOP_0_4_0.md](DESKTOP_0_4_0.md). Die erneute Bedienungsprüfung und Version 0.5 sind in [DESKTOP_0_5_0.md](DESKTOP_0_5_0.md) dokumentiert; dessen Windows-Nachweis steht im jeweiligen Release-Manifest.
 
 **Das gesamte Pflichtenheft ist noch nicht erfüllt.** Die Tabellen unterscheiden vorhandene Funktion, technischen Nachweis und verbleibende Implementierung/Abnahme. Implementiert bedeutet keine Produktiv-, Datenschutz- oder Sicherheitsfreigabe. Alle Tests verwenden synthetische Daten.
 
@@ -25,12 +25,12 @@ Stand: 03.11.2026. Quelle: `SurveyStudio_Pro_Pflichtenheft_v1_0.docx`, Version 1
 | F-015 Ergebnisse teilen / P0 | Separater zufälliger Ergebnislink/QR, Ablauf/Widerruf, eingefrorene Aggregate und Gruppensuppression; kein öffentlicher Rohdatenzugriff | Allgemeine Anonymitätsgarantie und Kombination mehrerer gezielter Freigaben nicht nachgewiesen |
 | F-016 Assets / P0 | Magic Bytes, Rasterdecodierung, Pixel-/Dateilimit, Metadatenentfernung/Neukodierung; Zugriff bis aktiver Veröffentlichung privat; Eigentum/Löschung geprüft | Allgemeine AV-/Dokumenten-Sanitization; Antwortdateien/Inline-Bildoptionen nutzen nicht dieselbe Rasterpipeline; Lebenszyklus alter Assets offen |
 | F-017 Autosave / P0 | Revision-CAS, Fehler-/Konfliktanzeige; Wiederholschleife nach 409 und veraltete asynchrone Ergebnisse verhindert; API-Konflikttest | Vollständige Zweifenster-UI-Abnahme |
-| F-018 Desktop / P1 | Tauri, echter lokaler Store, Offline-Editor/Abgabe/CSV, SQLCipher mit Schlüsselbund; SQLite-Neustart- und native Verschlüsselungs-/Sperrtests | Windows-Installer/GUI und echter Schlüsselbundanbieter nicht ausgeführt; persönliche lokale Modi und XLSX/PDF fehlen |
+| F-018 Desktop / P1 | Tauri, echter lokaler Store, Offline-Editor/Abgabe/CSV, SQLCipher mit Schlüsselbund; SQLite-Neustart- und native Verschlüsselungs-/Sperrtests | Windows 0.4: Installer, echter Schlüsselbund und nativer GUI-Ablauf bestanden; 0.5-Nachweis im Release-Manifest. Persönliche lokale Modi, XLSX/PDF und vollständige manuelle Windows-Abnahme fehlen |
 | F-019 Sync / P1 | Manueller HTTPS-Push, widerrufbare Gerätetoken, Outbox, Payload-Hash/Idempotenz und Konflikte; echte SQLite→PostgreSQL-Prüfung | Pull, automatische Planung, Tombstones und vollständige Mehrgeräte-Konfliktlösung fehlen |
 | F-020 Teilnehmer / P1 | CSV/XLSX mit Vorschau/Duplikaten, verschlüsselte Liste, persönliche Einladungscodes, Rechteprüfung | Vollständige Status-/Anmeldelisten und Erinnerungssteuerung fehlen |
 | F-021 E-Mail / P1 | Verschlüsselte Queue, STARTTLS/SMTP-TLS, fester Betreiberabsender, Status/Retry, Einladung/Reset/Verifikation; Entwicklungspostfach in Produktion gesperrt | Echter TLS-Testversand, organisationsbezogene verifizierte Absender, OAuth/Bounces/Bestätigungs-/Reminderplanung fehlen |
 | F-022 Zusammenarbeit / P1 | Projektfreigabe, Kommentare mit Erledigtstatus, Historie/Restore und Revisionsschutz | Zugewiesene Aufgaben, Bearbeitungssperren und parallele UI-Abnahme fehlen |
-| F-023 Erweiterte Fragen / P1 | Likert, zwei Matrixarten, Sterne, Slider, Ranking, NPS, Bildauswahl, Datei und Termin; alle 19 Typen durch echte API-Abgabe und Validierung | Dedizierte visuelle und Exportabnahme jedes erweiterten Typs offen |
+| F-023 Erweiterte Fragen / P1 | Likert, zwei Matrixarten, Sterne, Slider, Ranking, NPS, Bildauswahl, Datei und Termin; alle 19 Typen durch echte API-Abgabe und Validierung | Alle 19 Typen in Chromium angelegt und in der Vorschau bedient; dedizierte manuelle visuelle und Exportabnahme jedes erweiterten Typs offen |
 | F-024 Logik / P1 | Sichtbarkeit, bedingte Pflicht, UND/ODER, Vorwärtssprünge bis Abschluss, Zyklus-/Referenzprüfung; versteckte Pflichtfragen blockieren nicht | Komplexe interaktive Ablaufabnahme über mehrere Geräte |
 | F-025 Reporting / P1 | Farben, Frage-/Versionsauswahl, SVG/PNG der Diagramme und PDF-Bericht; serverseitige Rechte | Persistierbarer Dashboard-Builder, kombinierbare Filter und visuelle Exportabnahme fehlen |
 | F-026 Rechteverwaltung / P1 | Analyst/Gast, Mitgliederverwaltung, Auditansicht und DB-geschützte Ereignisse; Entzug geprüft | Benutzerdefinierte Rechte/Betriebsrollen fehlen |
@@ -65,7 +65,7 @@ Stand: 03.11.2026. Quelle: `SurveyStudio_Pro_Pflichtenheft_v1_0.docx`, Version 1
 | NFR-10 | Strikte TypeScript-Builds, API-/Schema-/SQLite-Verträge, Lockfiles/additive Migrationen; Shared-Kern teilweise CJS, ergänzte OpenAPI-Routen nicht vollständig DTO-typisiert. |
 | NFR-11 | DB-Health, Request-ID, Fehlerformat, Audit/Jobstatus; vollständige Metriken/Alerts/Telemetrieprüfung fehlen. |
 | NFR-12 | Asynchrone Exporte in 500er-Blöcken; CSV mit 100.100 Sitzungen/277,9 MB in rund 14 s erzeugt und vollständig geprüft. Großer XLSX und verbindliche Laufzeitgrenze offen. |
-| NFR-13 | Docker-Appbuild/Startprüfung, Cargo-Lockfile/native SQLCipher-Tests und Windows-Buildworkflow; Windows-Installer nicht gebaut/ausgeführt, Gesamtrollback offen. |
+| NFR-13 | Docker-Appbuild/Startprüfung, Cargo-Lockfile/native SQLCipher-Tests und Windows-Buildworkflow; Windows-Installer 0.4 gebaut und nativ ausgeführt; 0.5-Nachweis im Release-Manifest, Gesamtrollback offen. |
 | NFR-14 | Deutsche UI/Unicode einschließlich CJK geprüft; Übersetzungsschlüssel und vollständige Locale-Formatierung offen. |
 
 ## Abnahmefälle
@@ -84,7 +84,7 @@ Stand: 03.11.2026. Quelle: `SurveyStudio_Pro_Pflichtenheft_v1_0.docx`, Version 1
 | AT-10 | Identische Links für anonyme Einladungsliste, keine individuelle Einladung erzeugt; DB verbietet Zuordnung. Vollständige Betriebslog-/Zeitkorrelationsprüfung offen. |
 | AT-11 | Queue/Status/Transportkonfiguration vorhanden; kein echter verifizierter SMTP-Testversand. |
 | AT-12 | Veraltete Revision ergibt 409 ohne Überschreiben; Zweifenster-Konfliktdialog offen. |
-| AT-13 | Echte SQLite-Neustart-/CSV- und native SQLCipher-Tests; Windows-Offline-GUI-Ablauf offen. |
+| AT-13 | Echte SQLite-Neustart-/CSV- und native SQLCipher-Tests; Windows-Offline-GUI-Ablauf 0.4 bestanden; 0.5 ergänzt Navigation, Upgrade und echten Speicherdialog, Nachweis im Release-Manifest. |
 | AT-14 | Echte Outbox→PostgreSQL mit Retry/ACK, Konflikt/Tokenwiderruf; Pull/Tombstones fehlen. |
 | AT-15 | Antwort-Retention und persönliche Löschung inklusive Share-/Exportbereinigung geprüft; gesamte Asset-/Identitäts-/Backup-Policy offen. |
 | AT-16 | Unicode-PDF und SVG/PNG vorhanden; visuelle Gleichheits-/Druckabnahme offen. |
