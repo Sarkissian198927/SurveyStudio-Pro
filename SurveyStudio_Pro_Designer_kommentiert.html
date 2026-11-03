@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SurveyStudio Pro – kommentierter Fragebogen-Designer</title>
+
+  <!--
+    SURVEYSTUDIO PRO – KOMMENTIERTE EINZELDATEI
+    ===========================================
+    Version: 0.1.1 (Lern- und Demonstrationsversion)
+
+    Diese Datei enthält die komplette Demo in EINER Datei:
+      1. HTML = Seitenstruktur
+      2. CSS  = Gestaltung und responsive Layouts
+      3. JS   = Fragenverwaltung, Vorschau und lokale Speicherung
+
+    Installation: Diese HTML-Datei doppelklicken und im Browser öffnen.
+    Es werden keine Frameworks, externen Skripte oder Server benötigt.
+
+    WICHTIG: Es handelt sich um den lokalen Demo-Designer, NICHT um das
+    vollständige React-/NestJS-Projekt. Es werden keine echten Antworten
+    gespeichert, keine öffentlichen Links/QR-Codes erzeugt und keine
+    Nutzerkonten verwaltet.
+  -->
+  <style>
+    /* 1. DESIGNVARIABLEN – hier kannst du die Grundfarben anpassen. */
+    :root {
+      --ui-blue: #3569e8;
+      --ui-text: #192d47;
+      --ui-border: #dce5f1;
+      --ui-bg: #f4f7fb;
+      --ui-muted: #61748d;
+      font-family: system-ui, 'Segoe UI', Arial, sans-serif;
+      color: var(--ui-text);
+      background: var(--ui-bg);
+    }
+
+    /* 2. GRUNDLAYOUT – drei Bereiche: Fragetypen | Designer | Einstellungen. */
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    :is(button, input, textarea, select):focus-visible {
+      outline: 3px solid #9cbaff;
+      outline-offset: 2px;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    .app { display: grid; grid-template-columns: 225px minmax(0, 1fr) 285px; min-height: 100vh; }
+    .sidebar { background: #152b45; color: #f1f6ff; padding: 23px 16px; }
+    .brand { font-size: 19px; font-weight: 800; letter-spacing: -.04em; margin-bottom: 28px; }
+    .brand span { color: #91b5ff; font-size: 12px; letter-spacing: 0; }
+    .section-label { font-size: 11px; font-weight: 750; color: #acc1e0; letter-spacing: .05em; margin-bottom: 12px; }
+    .type-list { display: grid; gap: 7px; }
+    .type-list button {
+      text-align: left; border: 1px solid #36516f; border-radius: 9px;
+      color: #fff; background: #233f62; padding: 10px 11px; font-size: 12px;
+    }
+    .type-list button:hover { background: #31547c; }
+    .sidebar-tip { margin-top: 24px; background: #254464; padding: 13px; border-radius: 10px; font-size: 12px; line-height: 1.5; }
+
+    /* 3. HAUPTBEREICH UND FRAGEKARTEN. */
+    .workspace { min-width: 0; }
+    .toolbar {
+      display: flex; flex-wrap: wrap; justify-content: space-between;
+      align-items: center; gap: 12px; background: #fff;
+      border-bottom: 1px solid var(--ui-border); padding: 18px 24px;
+    }
+    .toolbar h1 { font-size: 20px; margin-bottom: 4px; }
+    .status { color: var(--ui-muted); font-size: 12px; }
+    .buttons { display: flex; gap: 7px; flex-wrap: wrap; }
+    .btn { border: 0; color: #fff; background: var(--ui-blue); border-radius: 8px; font-weight: 700; padding: 10px 12px; font-size: 12px; }
+    .btn.secondary { border: 1px solid #cbd9ed; color: #245bc2; background: white; }
+    .btn.danger { border: 1px solid #f0c1c8; color: #aa2c40; background: #fff7f7; }
+    .content { max-width: 930px; margin: 0 auto; padding: 24px; }
+    .notice { background: #fff7db; color: #6e571d; border: 1px solid #f5df9b; padding: 12px 14px; border-radius: 8px; font-size: 12px; margin-bottom: 16px; }
+    .paper {
+      --survey-accent: #3569e8;
+      --survey-font: Arial, sans-serif;
+      background: #fff; border: 1px solid var(--ui-border); border-radius: 12px;
+      padding: 30px; min-height: 520px; box-shadow: 0 12px 32px #172c470e;
+      color: #172a43; font-family: var(--survey-font);
+      background-position: center; background-size: cover;
+    }
+    .eyebrow { color: var(--survey-accent); font-size: 11px; font-weight: 800; letter-spacing: .1em; }
+    .paper h2 { font-size: 26px; margin: 10px 0; }
+    .paper-description { font-size: 13px; opacity: .8; line-height: 1.5; }
+    .question-card { border: 1px solid #dbe4ef; border-radius: 10px; margin-top: 14px; padding: 17px; background: #ffffffee; }
+    .question-card.selected { border: 2px solid var(--survey-accent); padding: 16px; box-shadow: 0 0 0 3px #dce9ff; }
+    .question-bar { display: flex; gap: 6px; align-items: center; margin-bottom: 13px; }
+    .question-bar strong { margin-right: auto; color: #536b85; font-size: 11px; }
+    .question-bar button { border: 0; border-radius: 6px; background: #eef3fb; color: #375d9b; padding: 5px 7px; }
+    .question-label { font-weight: 650; margin-bottom: 8px; font-size: 14px; }
+    .question-description { color: #64758c; font-size: 12px; }
+    .mock { color: #91a1b2; border: 1px solid #dce4ef; border-radius: 7px; padding: 10px; font-size: 12px; }
+    .mock-choice { display: block; border: 0; padding: 7px 0; }
+    .empty { color: #8596aa; text-align: center; margin: 80px 0; font-size: 14px; }
+    .end-note { margin-top: 22px; font-size: 12px; color: #6a7e94; text-align: center; }
+
+    /* 4. EIGENSCHAFTENPANEL. */
+    .properties { background: white; border-left: 1px solid var(--ui-border); padding: 23px 18px; min-width: 0; }
+    .properties h3 { font-size: 16px; margin-bottom: 7px; }
+    .help { color: var(--ui-muted); font-size: 12px; line-height: 1.55; }
+    .field-label { display: block; font-weight: 650; color: #506783; font-size: 12px; margin: 15px 0 7px; }
+    .field { display: block; width: 100%; border: 1px solid #cfdbea; padding: 9px; border-radius: 7px; color: #213952; font-size: 13px; background: white; }
+    textarea.field { resize: vertical; }
+    .check { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-top: 15px; }
+    .color-row { display: flex; justify-content: space-between; align-items: center; gap: 9px; font-size: 12px; margin: 13px 0; }
+    .color-row input { width: 55px; height: 33px; border: 0; cursor: pointer; }
+    .splitter { border: 0; border-top: 1px solid #e5ebf5; margin: 21px 0; }
+    .option-row { display: flex; align-items: center; gap: 6px; margin: 8px 0; }
+    .option-row button { border: 0; background: #fff3f3; color: #b63e50; border-radius: 6px; padding: 8px; }
+    .file-input { font-size: 12px; width: 100%; }
+
+    /* 5. VORSCHAU UND MOBILES LAYOUT. */
+    .intro { padding: 30px 10px; text-align: center; }
+    .preview-question { padding: 16px 0; border-top: 1px solid #e4ebf5; }
+    .preview-question > label { display: block; font-weight: 650; font-size: 14px; margin-bottom: 9px; }
+    .preview-choice { display: block; margin: 6px 0; background: #f5f8fd; padding: 9px; border-radius: 7px; font-size: 13px; }
+    .preview-choice input { margin-right: 8px; }
+    .preview-actions { margin-top: 20px; }
+    .error { color: #9d2d40; background: #ffeef0; padding: 10px; border-radius: 7px; font-size: 12px; }
+    .success { color: #176c46; background: #e4f7ed; padding: 10px; border-radius: 7px; font-size: 13px; }
+    [hidden] { display: none !important; }
+    @media (max-width: 980px) {
+      .app { grid-template-columns: 190px minmax(0, 1fr); }
+      .properties { grid-column: 1 / -1; border-top: 1px solid var(--ui-border); }
+    }
+    @media (max-width: 620px) {
+      .app { display: block; }
+      .sidebar { padding: 15px; }
+      .brand { margin-bottom: 12px; }
+      .type-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .toolbar { padding: 16px; }
+      .content { padding: 14px; }
+      .paper { padding: 19px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- HAUPTANSICHT: Navigation links, Fragebogen mittig, Einstellungen rechts. -->
+  <div class="app">
+    <aside class="sidebar" aria-label="Fragearten">
+      <div class="brand">▦ SurveyStudio <span>PRO</span></div>
+      <div class="section-label">FRAGEART AUSWÄHLEN</div>
+      <div id="typeList" class="type-list"></div>
+      <div class="sidebar-tip">
+        <strong>Lokale Demonstration</strong>
+        <p>Entwürfe werden im Browser gespeichert. Für die dauerhafte Sicherung kannst du sie zusätzlich als JSON-Datei exportieren.</p>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="toolbar">
+        <div>
+          <h1>Fragebogen-Designer</h1>
+          <div id="status" class="status" role="status" aria-live="polite">Bereit</div>
+        </div>
+        <div class="buttons">
+          <button class="btn secondary" data-action="new">Neu</button>
+          <button class="btn secondary" data-action="import">Import</button>
+          <button class="btn secondary" data-action="export">JSON exportieren</button>
+          <button class="btn secondary" id="previewButton" data-action="preview">Vorschau</button>
+          <button class="btn" data-action="save">Speichern</button>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="notice">
+          Dies ist eine eigenständige Offline-Demo. Es gibt keine Server-Datenbank,
+          Benutzerverwaltung, öffentlichen Umfragelinks oder Speicherung von Teilnehmerantworten.
+        </div>
+        <!-- JavaScript setzt hier die bearbeitbare Darstellung oder Vorschau ein. -->
+        <section id="paper" class="paper" aria-label="Fragebogen"></section>
+      </div>
+    </main>
+
+    <!-- Die Einstellungen wechseln je nachdem, ob eine Frage ausgewählt ist. -->
+    <aside id="properties" class="properties" aria-label="Eigenschaften"></aside>
+  </div>
+
+  <!-- Versteckte Dateiauswahl für den Import gespeicherter Entwürfe. -->
+  <input id="importFile" type="file" accept="application/json,.json" hidden>
+
+  <script>
+    'use strict';
+
+    // ===============================================================
+    // 6. DATENMODELL UND FRAGETYPEN
+    // ===============================================================
+    // Die Kennung (z. B. "single_choice") sollte über die Lebensdauer
+    // eines Fragebogens stabil bleiben, damit Antworten später eindeutig
+    // ausgewertet werden können.
+    const QUESTION_TYPES = [
+      ['short_text', 'Kurztext'],
+      ['long_text', 'Langer Text'],
+      ['number', 'Zahl'],
+      ['email', 'E-Mail'],
+      ['date', 'Datum'],
+      ['boolean', 'Ja / Nein'],
+      ['single_choice', 'Einfachauswahl'],
+      ['multi_choice', 'Mehrfachauswahl'],
+      ['dropdown', 'Dropdown']
+    ];
+    const CHOICE_TYPES = new Set(['single_choice', 'multi_choice', 'dropdown']);
+    const VALID_TYPES = new Set(QUESTION_TYPES.map(([id]) => id));
+    const FONTS = ['Arial, sans-serif', 'Georgia, serif', 'Verdana, sans-serif'];
+    const STORAGE_KEY = 'surveystudio-kommentiert-v1';
+
+    /** Erzeugt einen leeren Fragebogen mit konfigurierbarem Design. */
+    function emptySurvey() {
+      return {
+        title: 'Meine erste Umfrage',
+        description: 'Wir freuen uns über Ihre Rückmeldung.',
+        intro: 'Willkommen! Vielen Dank für Ihre Teilnahme.',
+        outro: 'Vielen Dank für Ihre Teilnahme!',
+        accent: '#3569e8',
+        bg: '#f6f8fc',
+        text: '#172a43',
+        font: FONTS[0],
+        image: '',
+        questions: []
+      };
+    }
+
+    /** Erzeugt eine neue stabile Frage-ID. */
+    function makeId() {
+      return globalThis.crypto?.randomUUID?.() ??
+        `q_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    }
+
+    /** Sichere HTML-Ausgabe: Benutzereingaben werden als Text gerendert. */
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[char]);
+    }
+
+    /** Farben auf sechsstellige Hex-Werte begrenzen (verhindert CSS-Injektionen). */
+    function safeColor(value, fallback) {
+      return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value) ? value : fallback;
+    }
+
+    /** Begrenzt importierte Texte auf eine sinnvolle Länge. */
+    function safeString(value, fallback = '', max = 5000) {
+      return typeof value === 'string' ? value.slice(0, max) : fallback;
+    }
+
+    // ===============================================================
+    // 7. IMPORTVALIDIERUNG UND SPEICHERUNG
+    // ===============================================================
+    // JSON-Dateien sind nicht automatisch vertrauenswürdig. Deshalb
+    // übernehmen wir nur ausdrücklich unterstützte Felder und Fragetypen.
+    function cleanSurvey(raw) {
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw) ||
+          !Array.isArray(raw.questions) || raw.questions.length > 200) {
+        throw new Error('Ungültiges Fragebogenformat.');
+      }
+      const defaults = emptySurvey();
+      const image = safeString(raw.image, '', 1_500_000);
+      const survey = {
+        title: safeString(raw.title, defaults.title, 300),
+        description: safeString(raw.description, defaults.description),
+        intro: safeString(raw.intro, defaults.intro),
+        outro: safeString(raw.outro, defaults.outro),
+        accent: safeColor(raw.accent, defaults.accent),
+        bg: safeColor(raw.bg, defaults.bg),
+        text: safeColor(raw.text, defaults.text),
+        font: FONTS.includes(raw.font) ? raw.font : FONTS[0],
+        // Nur kleine Rasterbilder als Data-URL; keine externen Bildlinks.
+        image: /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(image) ? image : '',
+        questions: []
+      };
+      const usedIds = new Set();
+      for (const item of raw.questions) {
+        if (!item || typeof item !== 'object' || !VALID_TYPES.has(item.type)) {
+          throw new Error('Fragetyp in Importdatei nicht unterstützt.');
+        }
+        let id = safeString(item.id, '', 120);
+        if (!/^[a-zA-Z0-9_-]{1,120}$/.test(id) || usedIds.has(id)) id = makeId();
+        usedIds.add(id);
+        const rawOptions = Array.isArray(item.options) ? item.options.slice(0, 40) : [];
+        const options = CHOICE_TYPES.has(item.type) ?
+          rawOptions.map(x => safeString(x, '', 300)) : [];
+        if (CHOICE_TYPES.has(item.type)) {
+          while (options.length < 2) options.push(`Option ${options.length + 1}`);
+        }
+        survey.questions.push({
+          id,
+          type: item.type,
+          label: safeString(item.label, 'Neue Frage', 500),
+          description: safeString(item.description, '', 2000),
+          required: item.required === true,
+          bold: item.bold === true,
+          italic: item.italic === true,
+          color: safeColor(item.color, defaults.text),
+          options
+        });
+      }
+      return survey;
+    }
+
+    const $ = id => document.getElementById(id);
+    let survey = emptySurvey();
+    let selectedId = null; // null bedeutet: allgemeine Umfrageeinstellungen.
+    let previewMode = false;
+
+    /** Entwurf aus dem lokalen Speicher laden, falls vorhanden. */
+    function restore() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) survey = cleanSurvey(JSON.parse(raw));
+      } catch (error) {
+        setStatus('Vorheriger Entwurf nicht lesbar; bitte eine JSON-Sicherung verwenden.');
+      }
+    }
+
+    function setStatus(message) {
+      $('status').textContent = message;
+    }
+
+    /** Browser-Speicherung. Für echte Teamprojekte wäre hier eine API nötig. */
+    function save() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(survey));
+        setStatus('Lokal gespeichert um ' + new Date().toLocaleTimeString('de-DE'));
+        return true;
+      } catch (error) {
+        setStatus('Lokale Speicherung fehlgeschlagen. Bitte den JSON-Export verwenden.');
+        return false;
+      }
+    }
+
+    function currentQuestion() {
+      return survey.questions.find(q => q.id === selectedId) ?? null;
+    }
+
+    // ===============================================================
+    // 8. FRAGEN HINZUFÜGEN, VERSCHIEBEN, KOPIEREN, LÖSCHEN
+    // ===============================================================
+    function addQuestion(type) {
+      if (!VALID_TYPES.has(type) || survey.questions.length >= 200) return;
+      const question = {
+        id: makeId(), type, label: 'Neue Frage', description: '',
+        required: false, bold: false, italic: false, color: survey.text,
+        options: CHOICE_TYPES.has(type) ? ['Option 1', 'Option 2'] : []
+      };
+      survey.questions.push(question);
+      selectedId = question.id;
+      previewMode = false;
+      render();
+      save();
+    }
+
+    function moveQuestion(id, offset) {
+      const from = survey.questions.findIndex(q => q.id === id);
+      const to = from + offset;
+      if (from < 0 || to < 0 || to >= survey.questions.length) return;
+      [survey.questions[from], survey.questions[to]] =
+        [survey.questions[to], survey.questions[from]];
+      render();
+      save();
+    }
+
+    function duplicateQuestion(id) {
+      const index = survey.questions.findIndex(q => q.id === id);
+      if (index < 0 || survey.questions.length >= 200) return;
+      const copy = structuredClone(survey.questions[index]);
+      copy.id = makeId();
+      copy.label += ' (Kopie)';
+      survey.questions.splice(index + 1, 0, copy);
+      selectedId = copy.id;
+      render();
+      save();
+    }
+
+    function deleteQuestion(id) {
+      survey.questions = survey.questions.filter(q => q.id !== id);
+      if (selectedId === id) selectedId = null;
+      render();
+      save();
+    }
+
+    // ===============================================================
+    // 9. DARSTELLUNG DER LINKEN FRAGETYPEN-BIBLIOTHEK
+    // ===============================================================
+    function renderTypeList() {
+      $('typeList').innerHTML = QUESTION_TYPES.map(([type, label]) =>
+        `<button type="button" data-action="add" data-type="${type}">+ ${escapeHtml(label)}</button>`
+      ).join('');
+    }
+
+    /** Vorschau einer Eingabe, noch ohne echte Teilnehmerdaten. */
+    function mockInput(question) {
+      if (CHOICE_TYPES.has(question.type) || question.type === 'boolean') {
+        const labels = question.type === 'boolean' ? ['Ja', 'Nein'] : question.options;
+        return labels.map(x => `<span class="mock mock-choice">○ ${escapeHtml(x)}</span>`).join('');
+      }
+      return `<div class="mock">${question.type === 'long_text' ? 'Mehrzeilige Antwort' : 'Antwort eingeben ...'}</div>`;
+    }
+
+    // ===============================================================
+    // 10. DESIGNER-ANSICHT
+    // ===============================================================
+    // Die Fragen werden aus dem Datenmodell neu aufgebaut. Mit Escape-
+    // Funktionen verhindern wir, dass Benutzereingaben als HTML laufen.
+    function renderDesigner() {
+      const cards = survey.questions.map((question, index) => {
+        const typeLabel = QUESTION_TYPES.find(([type]) => type === question.type)?.[1];
+        return `
+          <article class="question-card ${selectedId === question.id ? 'selected' : ''}"
+                   data-select-id="${escapeHtml(question.id)}">
+            <div class="question-bar">
+              <strong>FRAGE ${index + 1} · ${escapeHtml(typeLabel)}</strong>
+              <button type="button" data-action="up" data-id="${escapeHtml(question.id)}" aria-label="Frage nach oben">↑</button>
+              <button type="button" data-action="down" data-id="${escapeHtml(question.id)}" aria-label="Frage nach unten">↓</button>
+              <button type="button" data-action="duplicate" data-id="${escapeHtml(question.id)}" aria-label="Frage duplizieren">⧉</button>
+              <button type="button" data-action="delete" data-id="${escapeHtml(question.id)}" aria-label="Frage löschen">✕</button>
+            </div>
+            <div class="question-label" style="color:${question.color};font-weight:${question.bold ? '800' : '650'};font-style:${question.italic ? 'italic' : 'normal'}">
+              ${escapeHtml(question.label)}${question.required ? ' *' : ''}
+            </div>
+            ${question.description ? `<p class="question-description">${escapeHtml(question.description)}</p>` : ''}
+            ${mockInput(question)}
+          </article>`;
+      }).join('');
+
+      $('paper').innerHTML = `
+        <div class="eyebrow">MEIN FRAGEBOGEN</div>
+        <h2>${escapeHtml(survey.title)}</h2>
+        <p class="paper-description">${escapeHtml(survey.description)}</p>
+        ${cards || '<div class="empty">Wähle links einen Fragetyp, um zu beginnen.</div>'}
+        <div class="end-note">${escapeHtml(survey.outro)}</div>`;
+    }
+
+    // ===============================================================
+    // 11. AUSFÜLLBARE VORSCHAU
+    // ===============================================================
+    // Die Vorschau prüft Browser-Pflichtfelder. Sie speichert bewusst
+    // KEINE Teilnehmerantworten, da hier kein Backend existiert.
+    function previewInput(question) {
+      const name = `answer_${escapeHtml(question.id)}`;
+      const required = question.required ? 'required' : '';
+      const types = { short_text: 'text', email: 'email', number: 'number', date: 'date' };
+
+      if (question.type in types) {
+        return `<input class="field" name="${name}" type="${types[question.type]}" ${required}>`;
+      }
+      if (question.type === 'long_text') {
+        return `<textarea class="field" rows="3" name="${name}" ${required}></textarea>`;
+      }
+      if (question.type === 'dropdown') {
+        return `<select class="field" name="${name}" ${required}>
+          <option value="">Bitte auswählen</option>
+          ${question.options.map((opt, i) => `<option value="${i}">${escapeHtml(opt)}</option>`).join('')}
+        </select>`;
+      }
+      const choices = question.type === 'boolean' ? ['Ja', 'Nein'] : question.options;
+      const control = question.type === 'multi_choice' ? 'checkbox' : 'radio';
+      return choices.map((choice, i) => `
+        <label class="preview-choice">
+          <input type="${control}" name="${name}" value="${i}" ${required && control === 'radio' ? 'required' : ''}>
+          ${escapeHtml(choice)}
+        </label>`).join('');
+    }
+
+    function renderPreview() {
+      $('paper').innerHTML = `
+        <div class="intro">
+          <div class="eyebrow">UMFRAGEVORSCHAU</div>
+          <h2>${escapeHtml(survey.title)}</h2>
+          <p>${escapeHtml(survey.intro)}</p>
+          <p class="paper-description">${escapeHtml(survey.description)}</p>
+        </div>
+        <form id="previewForm">
+          ${survey.questions.map((question, index) => `
+            <div class="preview-question">
+              <label>${index + 1}. ${escapeHtml(question.label)}${question.required ? ' *' : ''}</label>
+              ${question.description ? `<p class="question-description">${escapeHtml(question.description)}</p>` : ''}
+              ${previewInput(question)}
+            </div>`).join('')}
+          <div id="previewError" role="alert"></div>
+          <div class="preview-actions"><button class="btn" type="submit">Vorschau abschließen</button></div>
+        </form>
+        <p class="help">Demo: Antworten werden weder übertragen noch gespeichert.</p>`;
+    }
+
+    // ===============================================================
+    // 12. EIGENSCHAFTEN: FRAGE ODER GESAMTES UMFRAGEDESIGN
+    // ===============================================================
+    function field(label, property, value, multiline = false) {
+      const control = multiline ?
+        `<textarea class="field" data-field="${property}" rows="3">${escapeHtml(value)}</textarea>` :
+        `<input class="field" data-field="${property}" value="${escapeHtml(value)}">`;
+      return `<label class="field-label">${label}</label>${control}`;
+    }
+
+    function renderProperties() {
+      if (previewMode) {
+        $('properties').innerHTML = '<h3>Vorschaumodus</h3><p class="help">So sehen Befragte den Fragebogen. Mit „Zurück zum Designer“ gelangst du zur Bearbeitung.</p>';
+        return;
+      }
+      const question = currentQuestion();
+      if (question) {
+        const optionEditor = CHOICE_TYPES.has(question.type) ? `
+          <hr class="splitter"><h3>Antwortoptionen</h3>
+          ${question.options.map((option, i) => `
+            <div class="option-row">
+              <input class="field" data-option="${i}" value="${escapeHtml(option)}">
+              <button type="button" data-action="remove-option" data-index="${i}"
+                      ${question.options.length <= 2 ? 'disabled' : ''} aria-label="Option entfernen">✕</button>
+            </div>`).join('')}
+          <button class="btn secondary" type="button" data-action="add-option" ${question.options.length >= 40 ? 'disabled' : ''}>+ Option hinzufügen</button>` : '';
+
+        $('properties').innerHTML = `
+          <h3>Frage bearbeiten</h3><p class="help">Fragetyp: ${escapeHtml(question.type)}</p>
+          ${field('Fragetext', 'label', question.label, true)}
+          ${field('Hilfetext', 'description', question.description, true)}
+          <label class="check"><input type="checkbox" data-flag="required" ${question.required ? 'checked' : ''}> Pflichtfrage</label>
+          <hr class="splitter"><h3>Textgestaltung</h3>
+          <label class="check"><input type="checkbox" data-flag="bold" ${question.bold ? 'checked' : ''}> Fett</label>
+          <label class="check"><input type="checkbox" data-flag="italic" ${question.italic ? 'checked' : ''}> Kursiv</label>
+          <label class="color-row">Fragefarbe <input type="color" data-color="color" value="${question.color}"></label>
+          ${optionEditor}
+          <hr class="splitter"><button type="button" class="btn secondary" data-action="deselect">← Umfragedesign</button>`;
+        return;
+      }
+
+      $('properties').innerHTML = `
+        <h3>Design und Texte</h3>
+        <p class="help">Die Einstellungen gelten für den gesamten Fragebogen.</p>
+        ${field('Titel', 'title', survey.title)}
+        ${field('Beschreibung', 'description', survey.description, true)}
+        ${field('Begrüßungstext', 'intro', survey.intro, true)}
+        ${field('Abschlusstext', 'outro', survey.outro, true)}
+        <hr class="splitter"><h3>Farben und Schrift</h3>
+        <label class="color-row">Akzentfarbe <input type="color" data-color="accent" value="${survey.accent}"></label>
+        <label class="color-row">Hintergrundfarbe <input type="color" data-color="bg" value="${survey.bg}"></label>
+        <label class="color-row">Textfarbe <input type="color" data-color="text" value="${survey.text}"></label>
+        <label class="field-label">Schriftart</label>
+        <select class="field" data-font>
+          ${FONTS.map(font => `<option value="${font}" ${survey.font === font ? 'selected' : ''}>${font.split(',')[0]}</option>`).join('')}
+        </select>
+        <hr class="splitter">
+        <label class="field-label" for="backgroundFile">Hintergrundbild (PNG, JPG oder WebP, maximal 1 MB)</label>
+        <input id="backgroundFile" class="file-input" type="file" accept="image/png,image/jpeg,image/webp">
+        ${survey.image ? '<button class="btn secondary" type="button" data-action="clear-image">Bild entfernen</button>' : ''}`;
+    }
+
+    /** Wendet die konfigurierten Farben und das Hintergrundbild an. */
+    function applyTheme() {
+      const paper = $('paper');
+      paper.style.setProperty('--survey-accent', survey.accent);
+      paper.style.setProperty('--survey-font', survey.font);
+      paper.style.color = survey.text;
+      paper.style.backgroundColor = survey.bg;
+      paper.style.backgroundImage = survey.image ? `url("${survey.image}")` : '';
+    }
+
+    /** Zeichnet die Oberfläche neu. */
+    function render() {
+      applyTheme();
+      if (previewMode) renderPreview();
+      else renderDesigner();
+      renderProperties();
+      $('previewButton').textContent = previewMode ? 'Zurück zum Designer' : 'Vorschau';
+    }
+
+    // ===============================================================
+    // 13. BENUTZERINTERAKTIONEN / EREIGNISVERARBEITUNG
+    // ===============================================================
+    // Event Delegation: Statt für jeden Button einen einzelnen Listener
+    // anzulegen, fängt dieser Handler alle Klicks zentral ab.
+    document.addEventListener('click', event => {
+      const button = event.target.closest('button[data-action]');
+      if (button) {
+        const action = button.dataset.action;
+        const id = button.dataset.id;
+        if (action === 'add') addQuestion(button.dataset.type);
+        if (action === 'up') moveQuestion(id, -1);
+        if (action === 'down') moveQuestion(id, 1);
+        if (action === 'duplicate') duplicateQuestion(id);
+        if (action === 'delete') deleteQuestion(id);
+        if (action === 'deselect') { selectedId = null; render(); }
+        if (action === 'add-option') {
+          const q = currentQuestion();
+          if (q && q.options.length < 40) { q.options.push('Neue Option'); render(); save(); }
+        }
+        if (action === 'remove-option') {
+          const q = currentQuestion();
+          if (q && q.options.length > 2) { q.options.splice(Number(button.dataset.index), 1); render(); save(); }
+        }
+        if (action === 'clear-image') { survey.image = ''; render(); save(); }
+        if (action === 'preview') { previewMode = !previewMode; selectedId = null; render(); }
+        if (action === 'save') { save(); }
+        if (action === 'new' && confirm('Neuen Entwurf erstellen? Der aktuelle lokale Entwurf wird ersetzt.')) {
+          survey = emptySurvey(); selectedId = null; previewMode = false; render(); save();
+        }
+        if (action === 'export') exportJson();
+        if (action === 'import') $('importFile').click();
+        return;
+      }
+      const card = event.target.closest('[data-select-id]');
+      if (card && !previewMode) { selectedId = card.dataset.selectId; render(); }
+    });
+
+    // Texteingaben werden sofort in das Modell übernommen. Nur die
+    // Fragebogenfläche wird neu gerendert, damit der Fokus im Eingabefeld bleibt.
+    document.addEventListener('input', event => {
+      const input = event.target;
+      if (input.dataset.field) {
+        const target = currentQuestion() ?? survey;
+        target[input.dataset.field] = input.value;
+        if (!previewMode) renderDesigner();
+        save();
+      }
+      if (input.dataset.option !== undefined) {
+        const q = currentQuestion();
+        if (q) { q.options[Number(input.dataset.option)] = input.value; renderDesigner(); save(); }
+      }
+    });
+
+    // Farben, Checkboxen und Schriftart ändern wir auf dem change-Ereignis.
+    document.addEventListener('change', event => {
+      const input = event.target;
+      const target = currentQuestion() ?? survey;
+      if (input.dataset.flag) { target[input.dataset.flag] = input.checked; render(); save(); }
+      if (input.dataset.color) {
+        target[input.dataset.color] = safeColor(input.value, '#172a43');
+        render(); save();
+      }
+      if (input.dataset.font !== undefined) {
+        survey.font = FONTS.includes(input.value) ? input.value : FONTS[0];
+        render(); save();
+      }
+      if (input.id === 'backgroundFile') loadBackground(input.files?.[0]);
+    });
+
+    // ===============================================================
+    // 14. BILDVERARBEITUNG UND JSON-IMPORT/-EXPORT
+    // ===============================================================
+    function loadBackground(file) {
+      if (!file) return;
+      const formats = ['image/png', 'image/jpeg', 'image/webp'];
+      if (!formats.includes(file.type) || file.size > 1_000_000) {
+        alert('Bitte PNG, JPG oder WebP mit maximal 1 MB auswählen.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        survey.image = String(reader.result);
+        render();
+        save();
+      };
+      reader.onerror = () => alert('Bild konnte nicht gelesen werden.');
+      reader.readAsDataURL(file);
+    }
+
+    /** Exportiert den aktuellen Entwurf als menschenlesbare JSON-Datei. */
+    function exportJson() {
+      const json = JSON.stringify(survey, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'surveystudio-entwurf.json';
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    $('importFile').addEventListener('change', async event => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      try {
+        if (file.size > 2_000_000) throw new Error('Die Datei ist zu groß.');
+        survey = cleanSurvey(JSON.parse(await file.text()));
+        selectedId = null;
+        previewMode = false;
+        render();
+        save();
+      } catch (error) {
+        alert('Import nicht möglich: ' + error.message);
+      }
+      event.target.value = '';
+    });
+
+    // ===============================================================
+    // 15. VORSCHAU ABSCHLIESSEN (OHNE SPEICHERUNG DER ANTWORTEN)
+    // ===============================================================
+    document.addEventListener('submit', event => {
+      if (event.target.id !== 'previewForm') return;
+      event.preventDefault();
+
+      // Für Mehrfachauswahl ist die Pflichtfeldprüfung gesondert nötig:
+      // HTML-"required" auf jeder Checkbox würde sonst ALLE erzwingen.
+      for (const q of survey.questions) {
+        if (q.type === 'multi_choice' && q.required) {
+          const checkboxes = event.target.querySelectorAll(`[name="answer_${q.id}"]`);
+          if (![...checkboxes].some(input => input.checked)) {
+            $('previewError').className = 'error';
+            $('previewError').textContent = `Bitte die Pflichtfrage „${q.label}“ beantworten.`;
+            checkboxes[0]?.focus();
+            return;
+          }
+        }
+      }
+      $('paper').innerHTML = `
+        <div class="intro"><h2>Vielen Dank!</h2>
+        <p>${escapeHtml(survey.outro)}</p>
+        <p class="success">Vorschau erfolgreich abgeschlossen. Es wurden keine Antworten gespeichert.</p></div>`;
+    });
+
+    // 16. PROGRAMMSTART: Vorhandenen Entwurf laden und Oberfläche anzeigen.
+    restore();
+    renderTypeList();
+    render();
+  </script>
+</body>
+</html>
