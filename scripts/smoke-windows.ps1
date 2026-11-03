@@ -23,7 +23,7 @@ function Start-TestApp {
 try {
  # Verify upgrade instead of testing only a fresh empty database.
  $oldInstaller=Join-Path $env:RUNNER_TEMP 'SurveyStudio-0.4-setup.exe'
- Invoke-WebRequest -UseBasicParsing -Uri 'https://github.com/Sarkissian198927/SurveyStudio-Pro/releases/download/v0.4.0-preview.1/SurveyStudio-Pro-0.4.0-Windows-x64-setup.exe' -OutFile $oldInstaller
+ Invoke-WebRequest -UseBasicParsing -TimeoutSec 120 -Uri 'https://github.com/Sarkissian198927/SurveyStudio-Pro/releases/download/v0.4.0-preview.1/SurveyStudio-Pro-0.4.0-Windows-x64-setup.exe' -OutFile $oldInstaller
  if((Get-FileHash $oldInstaller -Algorithm SHA256).Hash.ToLowerInvariant() -ne '957c1eda815af67ad2d9c2e715fe34fdc3636d79aad47a55b70641d8c7f4faeb'){throw 'Previous installer checksum mismatch.'}
  Install-TestPackage $oldInstaller
  Write-Output 'Starting installed version 0.4 and preparing upgrade data.'
