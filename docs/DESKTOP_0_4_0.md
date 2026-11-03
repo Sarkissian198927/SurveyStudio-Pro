@@ -14,6 +14,7 @@ Windows-x64-Vorabversion von SurveyStudio Pro. Der Nutzerauftrag umfasst Optimie
 - Bestätigtes lokales Löschen entfernt Antworten und noch nicht synchronisierte Antwortoperationen. Die Oberfläche erklärt, dass bereits übertragene Serverdaten bestehen bleiben.
 - Speicherfehler werden nicht mehr pauschal als Revisionskonflikt behandelt; nach einem vorübergehenden Fehler kann Speichern ohne Neuladen erneut versucht werden.
 - Speicherfehler beim Erststart werden mit Wiederholoption angezeigt. Eine fehlgeschlagene Initialisierung bleibt nicht dauerhaft als abgelehntes Promise zwischengespeichert.
+- Windows-taugliche Paketfilter ersetzen eine Linux-spezifische Shellquotierung. Fehlende Buildziele werden ausdrücklich als Fehler behandelt. Native Tests und Installer verwenden dasselbe Release-Ziel, um doppelte Abhängigkeitskompilierung zu vermeiden.
 - Integrierte Hilfe, deutscher Installer, EXE/MSI-Paketierung, Lizenzhinweise und SHA256-Prüfsummen.
 
 ## Prüfungen

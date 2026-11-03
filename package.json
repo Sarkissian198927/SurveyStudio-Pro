@@ -16,7 +16,7 @@
     "check": "pnpm test && pnpm run test:integration",
     "test:unit": "node --test --test-isolation=none packages/shared/shared.test.cjs packages/shared/features.test.cjs tests/project-contracts.test.cjs tests/permissions.test.cjs tests/desktop.test.cjs tests/dependencies.test.cjs",
     "test:integration": "pnpm run build && node --test --test-isolation=none --test-concurrency=1 tests/integration.test.cjs",
-    "build:packages": "pnpm -r --filter './packages/**' --if-present run build",
+    "build:packages": "pnpm -r --filter \"./packages/**\" --fail-if-no-match --if-present run build",
     "backup": "node scripts/backup.cjs",
     "test:load": "pnpm run build && node --test --test-isolation=none tests/load.test.cjs",
     "test:container": "node scripts/check-container.cjs",

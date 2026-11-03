@@ -58,15 +58,18 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: apps/desktop/src-tauri -> target
+          cache-on-failure: true
       - name: Ensure Perl is available for vendored SQLCipher/OpenSSL
         shell: pwsh
         run: |
           if (Test-Path 'C:\Strawberry\perl\bin') { 'C:\Strawberry\perl\bin' >> $env:GITHUB_PATH }
           perl --version
       - run: pnpm install --frozen-lockfile
+      - name: Build the frontend and shared packages on Windows
+        run: pnpm run build:desktop
       - name: Native transactions, encrypted storage and actual Windows credential store
         working-directory: apps/desktop/src-tauri
-        run: cargo test --locked storage::tests
+        run: cargo test --release --locked --target x86_64-pc-windows-msvc storage::tests
       - name: Collect third-party license texts
         run: node scripts/third-party-notices.cjs
       - name: Build NSIS and MSI installers
