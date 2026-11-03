@@ -39,7 +39,6 @@ jobs:
       - run: pnpm run test:integration
       - run: pnpm run test:desktop-ui
   windows:
-    needs: quality
     runs-on: windows-2022
     timeout-minutes: 60
     env:
