@@ -6,7 +6,7 @@ let csrf = '';
 export const setCsrf = (token: string) => {csrf=token;};
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
  const method=(options.method||'GET').toUpperCase();
- if(isDesktop()){try{return await (await localStore()).request(path,method,typeof options.body==='string'?JSON.parse(options.body):{}) as T;}catch(e){throw new ApiError(e instanceof Error?e.message:'Lokaler Zugriff fehlgeschlagen.',409);}}
+ if(isDesktop()){try{return await (await localStore()).request(path,method,typeof options.body==='string'?JSON.parse(options.body):{}) as T;}catch(e){const message=e instanceof Error?e.message:typeof e==='string'?e:'Lokaler Zugriff fehlgeschlagen.';throw new ApiError(message,message.startsWith('409:')?409:/SQLite|Datenbank|Speicherfehler|Transaktion/i.test(message)?503:422);}}
  const response=await fetch(`/api/v1${path}`,{
    ...options, credentials:'include',
    headers:{'Content-Type':'application/json',...(csrf && !['GET','HEAD'].includes(method)?{'X-Survey-CSRF':csrf}:{}),...options.headers}
