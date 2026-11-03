@@ -1,4 +1,5 @@
 $ErrorActionPreference='Stop'
+$ProgressPreference='SilentlyContinue'
 $installer=Get-ChildItem apps/desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe | Select-Object -First 1
 if(!$installer){throw 'NSIS installer not found.'}
 $installPath=Join-Path $env:RUNNER_TEMP 'SurveyStudioSmoke'
