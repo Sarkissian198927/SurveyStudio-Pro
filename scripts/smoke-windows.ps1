@@ -5,7 +5,7 @@ if(!$installer){throw 'NSIS installer not found.'}
 $installPath=Join-Path $env:RUNNER_TEMP 'SurveyStudioSmoke'
 $previousBrowserArguments=$env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS
 $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS='--remote-debugging-port=9222'
-$app=$null;$fixture=$null;$ca=$null;$serverCertificate=$null
+$app=$null;$fixture=$null
 function Stop-TestApp($process){if($null -ne $process -and !$process.HasExited){$process.CloseMainWindow() | Out-Null;if(!$process.WaitForExit(10000)){$process.Kill()}}}
 function Install-TestPackage($file,[switch]$Upgrade) {
  Write-Output ('Installing test package: '+[System.IO.Path]::GetFileName($file))
@@ -16,6 +16,7 @@ function Install-TestPackage($file,[switch]$Upgrade) {
  $setup=[System.Diagnostics.Process]::Start($info)
  if(!$setup.WaitForExit(180000)){$setup.Kill();throw 'Installer did not finish within three minutes.'}
  if($setup.ExitCode -ne 0){throw ("Installer exited with code "+$setup.ExitCode)}
+ Write-Output 'Test package installation completed.'
 }
 function Start-TestApp {
  $exe=Get-ChildItem $installPath -Recurse -Filter 'surveystudio-desktop.exe' | Select-Object -First 1
@@ -38,13 +39,10 @@ try {
  Stop-TestApp $app;$app=$null
  Write-Output 'Version 0.4 stopped; upgrading installation.'
  Install-TestPackage $installer.FullName -Upgrade
- # Ephemeral local TLS fixture. No production CA/key is bundled or uploaded.
- $testDir=Join-Path $env:RUNNER_TEMP 'surveystudio-tls-fixture';New-Item -ItemType Directory -Force $testDir | Out-Null
- $ca=New-SelfSignedCertificate -Type Custom -Subject "CN=SurveyStudio CI Root $([guid]::NewGuid())" -CertStoreLocation Cert:\CurrentUser\My -KeyUsage CertSign,CRLSign,DigitalSignature -KeyAlgorithm RSA -KeyLength 2048 -KeyExportPolicy Exportable -TextExtension @('2.5.29.19={critical}{text}ca=1&pathlength=0') -NotAfter (Get-Date).AddDays(2)
- $serverCertificate=New-SelfSignedCertificate -DnsName localhost -CertStoreLocation Cert:\CurrentUser\My -Signer $ca -KeyAlgorithm RSA -KeyLength 2048 -KeyExportPolicy Exportable -NotAfter (Get-Date).AddDays(1)
- $publicRoot=Join-Path $testDir 'root.cer';Export-Certificate -Cert $ca -FilePath $publicRoot | Out-Null;Import-Certificate -FilePath $publicRoot -CertStoreLocation Cert:\CurrentUser\Root | Out-Null
- $env:ONLINE_TEST_PASSWORD=[guid]::NewGuid().ToString('N');$env:ONLINE_TEST_PFX=Join-Path $testDir 'server.pfx';$env:ONLINE_TEST_URL='https://localhost:7443';$env:ONLINE_PORTAL_MARKER=Join-Path $testDir 'portal-opened.txt'
- Export-PfxCertificate -Cert $serverCertificate -FilePath $env:ONLINE_TEST_PFX -Password (ConvertTo-SecureString $env:ONLINE_TEST_PASSWORD -AsPlainText -Force) -CryptoAlgorithmOption AES256_SHA256 -ChainOption BuildChain | Out-Null
+ Write-Output 'Upgrade setup completed; starting prepared local HTTPS fixture.'
+ $testDir=$env:ONLINE_TEST_DIRECTORY
+ if(!$testDir){throw 'TLS fixture must be prepared in the preceding workflow step.'}
+ $env:ONLINE_TEST_PASSWORD=[System.IO.File]::ReadAllText((Join-Path $testDir 'password.txt'))
  $fixture=Start-Process -FilePath node -ArgumentList 'scripts/windows-online-fixture.cjs' -PassThru -RedirectStandardOutput (Join-Path $testDir 'server.log') -RedirectStandardError (Join-Path $testDir 'server-error.log')
  Start-Sleep -Seconds 2
  if($fixture.HasExited){throw 'Local HTTPS fixture failed to start.'}
@@ -57,7 +55,5 @@ try {
 } finally {
  Stop-TestApp $app
  if($null -ne $fixture -and !$fixture.HasExited){$fixture.Kill()}
- if($null -ne $ca){Remove-Item "Cert:\CurrentUser\Root\$($ca.Thumbprint)" -ErrorAction SilentlyContinue;Remove-Item "Cert:\CurrentUser\My\$($ca.Thumbprint)" -ErrorAction SilentlyContinue}
- if($null -ne $serverCertificate){Remove-Item "Cert:\CurrentUser\My\$($serverCertificate.Thumbprint)" -ErrorAction SilentlyContinue}
  $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=$previousBrowserArguments
 }

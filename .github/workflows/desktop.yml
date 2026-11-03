@@ -38,7 +38,7 @@ jobs:
       - name: Validate Windows automation scripts
         shell: pwsh
         run: |
-          foreach ($file in @('scripts/smoke-windows.ps1','scripts/save-windows-dialog.ps1')) {
+          foreach ($file in @('scripts/smoke-windows.ps1','scripts/save-windows-dialog.ps1','scripts/prepare-windows-tls.ps1')) {
             $tokens=$null; $parseErrors=$null
             [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file),[ref]$tokens,[ref]$parseErrors) | Out-Null
             if ($parseErrors.Count) { throw ($parseErrors | Out-String) }
@@ -93,10 +93,19 @@ jobs:
         run: node scripts/third-party-notices.cjs
       - name: Build NSIS and MSI installers
         run: pnpm --filter @surveystudio/desktop exec tauri build --target x86_64-pc-windows-msvc --no-sign -- --locked
+      - name: Prepare trusted local TLS fixture
+        timeout-minutes: 2
+        shell: powershell
+        run: ./scripts/prepare-windows-tls.ps1
       - name: Install, upgrade and exercise the packaged app
         timeout-minutes: 10
         shell: powershell
         run: ./scripts/smoke-windows.ps1
+      - name: Remove test certificates
+        if: always()
+        timeout-minutes: 2
+        shell: powershell
+        run: ./scripts/prepare-windows-tls.ps1 -Cleanup
       - name: Functional check diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
