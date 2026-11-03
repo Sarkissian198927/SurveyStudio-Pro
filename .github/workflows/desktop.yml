@@ -46,6 +46,10 @@ jobs:
       - run: pnpm test
       - run: pnpm run test:integration
       - run: pnpm run test:desktop-ui
+      - name: Build and verify complete HTTPS server containers
+        run: |
+          docker build -t surveystudio-pro:local .
+          pnpm run test:online-container
       - name: Prepare self-hosted HTTPS server package
         run: node scripts/package-server.cjs
       - uses: actions/upload-artifact@v4
@@ -109,7 +113,7 @@ jobs:
           Copy-Item docs/INSTALLATION_WINDOWS.md artifacts/desktop/INSTALLATION_WINDOWS.md
           $checksums = Get-ChildItem artifacts/desktop -File | Sort-Object Name | ForEach-Object { '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant(), $_.Name }
           $checksums | Set-Content artifacts/desktop/SHA256SUMS.txt -Encoding utf8
-          @{ version='0.5.0'; commit=$env:GITHUB_SHA; platform='windows-x86_64'; unsigned=$true; nativeTests='storage::tests'; installerSmoke='passed'; runUrl="https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID" } | ConvertTo-Json | Set-Content artifacts/desktop/build-manifest.json -Encoding utf8
+          @{ version='0.5.0'; commit=$env:GITHUB_SHA; platform='windows-x86_64'; unsigned=$true; nativeTests='all: storage and HTTPS URL validation'; installerSmoke='passed'; runUrl="https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID" } | ConvertTo-Json | Set-Content artifacts/desktop/build-manifest.json -Encoding utf8
       - uses: actions/upload-artifact@v4
         with:
           name: SurveyStudio-Pro-0.5.0-Windows-x64
