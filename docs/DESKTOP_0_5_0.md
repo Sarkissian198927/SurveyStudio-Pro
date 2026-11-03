@@ -29,6 +29,10 @@ Das Serverquellpaket enthält PostgreSQL, Anwendung und Caddy für HTTPS, dauerh
 
 Die SQLite-IPC-Tests ersetzen keine native Windows-Prüfung. Der TLS-Produktionsintegrationstest verwendet echte API/PostgreSQL und einen lokalen TLS-Proxy; er beweist keine öffentliche DNS-/ACME-Bereitstellung.
 
+## Zusätzliche Server-Containerprüfung
+
+`pnpm run test:online-container` verwendet das zuvor mit `docker build -t surveystudio-pro:local .` gebaute Image. Der Test startet die Online-Compose-Dienste in einem eigenen Netz mit eigenen temporären Volumes, lokaler Caddy-Test-CA und nur an Loopback gebundenem HTTPS-Port 8443. Er prüft Anmeldung, Erstellung und Bestand nach einem App-Neustart. Interner Verkehr zu `app`/`postgres` ist vom externen Proxy ausgenommen; öffentliche HTTPS-Verbindungen behalten die Proxy-/Zertifikatsregeln der Umgebung. Testgeheimnisse werden nur in ignorierten temporären Dateien gehalten und nach Beendigung entfernt. Keine öffentlichen DNS-/ACME- oder Mailzustellungsnachweise.
+
 ## Verbindliche Windows-Pipeline vor Downloadfreigabe
 
 `.github/workflows/desktop.yml` verlangt zusätzlich:

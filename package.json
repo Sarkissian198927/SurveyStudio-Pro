@@ -22,7 +22,8 @@
     "test:container": "node scripts/check-container.cjs",
     "test:backup": "node scripts/check-backup.cjs",
     "build:desktop": "pnpm run build:packages && pnpm --filter @surveystudio/web build",
-    "test:desktop-ui": "node --test --test-isolation=none --test-concurrency=1 tests/desktop-ui.test.cjs tests/desktop-areas.test.cjs"
+    "test:desktop-ui": "node --test --test-isolation=none --test-concurrency=1 tests/desktop-ui.test.cjs tests/desktop-areas.test.cjs",
+    "test:online-container": "node scripts/check-online-container.cjs"
   },
   "engines": {
     "node": ">=22.14.0"

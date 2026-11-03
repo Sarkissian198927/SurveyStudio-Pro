@@ -46,6 +46,8 @@ services:
     environment:
       SURVEY_DOMAIN: ${SURVEY_DOMAIN:?Öffentliche Domain fehlt}
       ACME_EMAIL: ${ADMIN_EMAIL:?Administratoradresse fehlt}
+      NO_PROXY: app,postgres,localhost,127.0.0.1,::1
+      no_proxy: app,postgres,localhost,127.0.0.1,::1
     volumes:
       - ./server/Caddyfile:/etc/caddy/Caddyfile:ro
       - online_caddy:/data

@@ -33,6 +33,8 @@ Für E-Mail-Verifikation neuer öffentlicher Konten und Passwort-Reset ist ein a
 
 PostgreSQL, Bilder, Exporte und Caddy-Zertifikate verwenden dauerhafte Volumes. Datenbank, Assetvolume und `DATA_ENCRYPTION_KEY` müssen gemeinsam sicher gesichert werden. Der enthaltene lokale Entwicklungs-Backuphelper ersetzt keinen Produktionsbackupplan. Kein `docker compose down -v` verwenden, wenn Daten erhalten bleiben sollen.
 
+Interner Containerverkehr zu `app` und `postgres` ist in Caddys `NO_PROXY`/`no_proxy` eingetragen. Ein vorhandener externer Proxy bleibt für externe Verbindungen nutzbar.
+
 Der direkte Dienstzugriff ist absichtlich intern. `TRUST_PROXY_HOPS=1` ist nur in dieser abgeschlossenen Konfiguration mit Caddy vor der API vorgesehen. Wer die API zusätzlich direkt ins Internet veröffentlicht, muss die Proxy-/Rate-Limit-Konfiguration neu prüfen.
 
 Die HTTP-/Docker-/lokalen TLS-Prüfungen im Projekt ersetzen keinen tatsächlichen DNS-/ACME-/Hostingtest auf einem noch nicht vorhandenen Server. Ein dauerhafter Online-Zugang kann erst mit gewähltem Hosting und Domain live abgenommen werden.
