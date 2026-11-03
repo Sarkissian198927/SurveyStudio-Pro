@@ -30,7 +30,9 @@ try {
  $app=Start-TestApp
  node scripts/smoke-windows-ui.cjs --seed-old
  if($LASTEXITCODE -ne 0){throw 'Previous-version data preparation failed.'}
+ Write-Output 'Closing version 0.4 before upgrade.'
  Stop-TestApp $app;$app=$null
+ Write-Output 'Version 0.4 stopped; upgrading installation.'
  Install-TestPackage $installer.FullName
  # Ephemeral local TLS fixture. No production CA/key is bundled or uploaded.
  $testDir=Join-Path $env:RUNNER_TEMP 'surveystudio-tls-fixture';New-Item -ItemType Directory -Force $testDir | Out-Null
