@@ -1,0 +1,12 @@
+diff --git a/lib/utils/stream-buf.js b/lib/utils/stream-buf.js
+index 90a46b28a2cdabbc3b9351817626486915cdcff1..caa20c4d84cd8842cc8d34abad31f6c441295882 100644
+--- a/lib/utils/stream-buf.js
++++ b/lib/utils/stream-buf.js
+@@ -345,6 +345,7 @@ utils.inherits(StreamBuf, Stream.Duplex, {
+     if (!this.paused && this.buffers.length) {
+       this.end();
+     }
++    return destination;
+   },
+   unpipe(destination) {
+     // remove destination from pipe list

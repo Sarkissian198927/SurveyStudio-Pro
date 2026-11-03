@@ -1,0 +1,1 @@
+console.log('\nSurveyStudio Pro — Entwicklungsserver\n\n1. docker compose up -d\n2. cp .env.example .env und JWT_SECRET setzen\n3. pnpm install\n4. pnpm run db:migrate\n5. Terminal A: pnpm run dev:api\n6. Terminal B: pnpm run dev:web\n7. http://localhost:5173\n\nDetails: README.md\n');

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "SurveyStudio Pro",
+  "version": "0.4.0",
+  "identifier": "de.surveystudio.pro",
+  "build": {
+    "beforeDevCommand": "pnpm --dir ../.. run dev:web",
+    "devUrl": "http://127.0.0.1:5173",
+    "beforeBuildCommand": "pnpm --dir ../.. run build:desktop",
+    "frontendDist": "../../web/dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "SurveyStudio Pro \u2013 Lokal",
+        "width": 1280,
+        "height": 900,
+        "minWidth": 390,
+        "minHeight": 640
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' asset: data: blob:; style-src 'self' 'unsafe-inline'; connect-src ipc: http://ipc.localhost; script-src 'self'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis",
+      "msi"
+    ],
+    "shortDescription": "Umfragen offline gestalten, durchf\u00fchren und auswerten",
+    "category": "Productivity",
+    "windows": {
+      "nsis": {
+        "languages": [
+          "German"
+        ],
+        "displayLanguageSelector": false,
+        "installMode": "currentUser"
+      },
+      "webviewInstallMode": {
+        "type": "embedBootstrapper",
+        "silent": true
+      }
+    },
+    "resources": {
+      "../../../docs/THIRD_PARTY_NOTICES.txt": "THIRD_PARTY_NOTICES.txt"
+    }
+  }
+}

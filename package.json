@@ -1,0 +1,56 @@
+{
+  "name": "surveystudio-pro",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "node scripts/dev-help.cjs",
+    "dev:api": "pnpm --filter @surveystudio/api dev",
+    "dev:web": "pnpm --filter @surveystudio/web dev",
+    "build": "pnpm run build:packages && pnpm --filter @surveystudio/api build && pnpm --filter @surveystudio/web build",
+    "test": "pnpm run build && pnpm run test:unit",
+    "db:migrate": "pnpm --filter @surveystudio/api db:migrate",
+    "check": "pnpm test && pnpm run test:integration",
+    "test:unit": "node --test --test-isolation=none packages/shared/shared.test.cjs packages/shared/features.test.cjs tests/project-contracts.test.cjs tests/permissions.test.cjs tests/desktop.test.cjs tests/dependencies.test.cjs",
+    "test:integration": "pnpm run build && node --test --test-isolation=none --test-concurrency=1 tests/integration.test.cjs",
+    "build:packages": "pnpm -r --filter './packages/**' --if-present run build",
+    "backup": "node scripts/backup.cjs",
+    "test:load": "pnpm run build && node --test --test-isolation=none tests/load.test.cjs",
+    "test:container": "node scripts/check-container.cjs",
+    "test:backup": "node scripts/check-backup.cjs",
+    "build:desktop": "pnpm run build:packages && pnpm --filter @surveystudio/web build",
+    "test:desktop-ui": "node --test --test-isolation=none tests/desktop-ui.test.cjs"
+  },
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "devDependencies": {
+    "@apidevtools/swagger-parser": "13.1.0",
+    "@playwright/test": "1.64.1",
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "dotenv": "16.6.1",
+    "jsqr": "1.4.0",
+    "pg": "8.23.1",
+    "pngjs": "7.0.0",
+    "pnpm": "10.11.0",
+    "typescript": "5.9.3"
+  },
+  "packageManager": "pnpm@10.11.0",
+  "pnpm": {
+    "overrides": {
+      "@nestjs/platform-express>multer": "2.5.0",
+      "exceljs>uuid": "11.1.1",
+      "exceljs>archiver": "7.0.1",
+      "exceljs>unzipper": "0.12.5",
+      "glob@^10.0.0": "14.0.3",
+      "readdir-glob>minimatch": "11.0.2"
+    },
+    "patchedDependencies": {
+      "exceljs@4.4.0": "patches/exceljs@4.4.0.patch"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "@surveystudio/renderer",
+  "version": "0.2.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@surveystudio/shared": "workspace:*",
+    "react": "^19.0.0",
+    "lucide-react": "^0.468.0"
+  },
+  "type": "module"
+}

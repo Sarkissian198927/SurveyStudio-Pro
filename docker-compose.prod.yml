@@ -1,0 +1,42 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: surveystudio
+      POSTGRES_USER: survey
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a strong database password securely}
+    volumes:
+      - production_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U survey -d surveystudio]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  app:
+    image: surveystudio-pro:local
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - 127.0.0.1:3001:3001
+    environment:
+      PGHOST: postgres
+      PGDATABASE: surveystudio
+      PGUSER: survey
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set database password securely}
+      JWT_SECRET: ${JWT_SECRET:?Set session key securely}
+      DATA_ENCRYPTION_KEY: ${DATA_ENCRYPTION_KEY:?Set persistent data key securely}
+      WEB_ORIGIN: ${WEB_ORIGIN:?Set public HTTPS origin}
+      PUBLIC_WEB_ORIGIN: ${PUBLIC_WEB_ORIGIN:?Set public HTTPS origin}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+    volumes:
+      - production_assets:/app/storage/assets
+    restart: unless-stopped
+volumes:
+  production_pg:
+  production_assets:

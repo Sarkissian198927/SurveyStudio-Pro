@@ -1,0 +1,1 @@
+{"name":"@surveystudio/desktop-store","private":true,"version":"0.3.0","main":"dist/index.js","types":"dist/index.d.ts","scripts":{"build":"tsc -p tsconfig.json"},"dependencies":{"@surveystudio/shared":"workspace:*"}}

@@ -1,0 +1,94 @@
+name: Windows installer
+on:
+  workflow_dispatch:
+  push:
+    branches: ['release/desktop-*']
+permissions:
+  contents: read
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: survey
+          POSTGRES_PASSWORD: survey_ci_only
+          POSTGRES_DB: surveystudio
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd 'pg_isready -U survey -d surveystudio'
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://survey:survey_ci_only@127.0.0.1:5432/surveystudio
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: sudo apt-get update && sudo apt-get install -y poppler-utils
+      - run: pnpm test
+      - run: pnpm run test:integration
+      - run: pnpm run test:desktop-ui
+  windows:
+    needs: quality
+    runs-on: windows-2022
+    timeout-minutes: 60
+    env:
+      CARGO_BUILD_JOBS: '4'
+      CARGO_INCREMENTAL: '0'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri -> target
+      - name: Ensure Perl is available for vendored SQLCipher/OpenSSL
+        shell: pwsh
+        run: |
+          if (Test-Path 'C:\Strawberry\perl\bin') { 'C:\Strawberry\perl\bin' >> $env:GITHUB_PATH }
+          perl --version
+      - run: pnpm install --frozen-lockfile
+      - name: Native transactions, encrypted storage and actual Windows credential store
+        working-directory: apps/desktop/src-tauri
+        run: cargo test --locked storage::tests
+      - name: Collect third-party license texts
+        run: node scripts/third-party-notices.cjs
+      - name: Build NSIS and MSI installers
+        run: pnpm --filter @surveystudio/desktop exec tauri build --target x86_64-pc-windows-msvc --no-sign -- --locked
+      - name: Install and launch the packaged app
+        shell: pwsh
+        run: ./scripts/smoke-windows.ps1
+      - name: Collect installers and checksums
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force artifacts/desktop | Out-Null
+          $files = @(Get-ChildItem apps/desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe) + @(Get-ChildItem apps/desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi)
+          if ($files.Count -ne 2) { throw 'Expected one EXE and one MSI installer.' }
+          $files | Copy-Item -Destination artifacts/desktop
+          Copy-Item docs/INSTALLATION_WINDOWS.md artifacts/desktop/INSTALLATION_WINDOWS.md
+          $checksums = Get-ChildItem artifacts/desktop -File | Sort-Object Name | ForEach-Object { '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant(), $_.Name }
+          $checksums | Set-Content artifacts/desktop/SHA256SUMS.txt -Encoding utf8
+          @{ version='0.4.0'; commit=$env:GITHUB_SHA; platform='windows-x86_64'; unsigned=$true; nativeTests='storage::tests'; installerSmoke='passed'; runUrl="https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID" } | ConvertTo-Json | Set-Content artifacts/desktop/build-manifest.json -Encoding utf8
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SurveyStudio-Pro-0.4.0-Windows-x64
+          path: artifacts/desktop/*
+          if-no-files-found: error
+          retention-days: 30

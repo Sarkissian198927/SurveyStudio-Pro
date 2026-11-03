@@ -1,0 +1,4 @@
+# Preserve upstream license text, the requirement baseline and historical tool output.
+assets/*LICENSE*.txt -whitespace
+docs/Pflichtenheft_Baseline_v1.0.md -whitespace
+docs/TESTLAUF_AUSGABE.txt -whitespace

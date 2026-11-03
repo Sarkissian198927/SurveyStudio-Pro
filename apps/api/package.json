@@ -1,0 +1,42 @@
+{
+  "name": "@surveystudio/api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "ts-node --transpile-only src/main.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "db:migrate": "node ../../db/migrate.cjs"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/jwt": "^11.0.0",
+    "@nestjs/platform-express": "^11.0.0",
+    "@surveystudio/analytics": "workspace:*",
+    "@surveystudio/logic": "workspace:*",
+    "@surveystudio/schema": "workspace:*",
+    "@surveystudio/shared": "workspace:*",
+    "bcryptjs": "^3.0.0",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.7",
+    "exceljs": "^4.4.0",
+    "express": "5.1.0",
+    "nodemailer": "^10.3.1",
+    "pdfkit": "^0.20.2",
+    "pg": "^8.13.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.8",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.14.0",
+    "@types/nodemailer": "^8.0.2",
+    "@types/pdfkit": "^0.17.7",
+    "@types/pg": "^8.11.13",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}

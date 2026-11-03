@@ -1,0 +1,16 @@
+{
+  "questions": 30,
+  "existingSessions": 100000,
+  "existingAnswers": 3000000,
+  "concurrent": 100,
+  "seedSeconds": 63,
+  "reportMs": 12110,
+  "exportMs": 14355,
+  "exportBytes": 277878032,
+  "p50Ms": 430,
+  "p95Ms": 627,
+  "maxMs": 641,
+  "cpuQuota": "4 CPUs",
+  "memoryLimitGiB": 32,
+  "note": "Synthetische Daten; abweichend von der 8-GB-Referenz des Pflichtenhefts."
+}

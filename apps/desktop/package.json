@@ -1,0 +1,13 @@
+{
+  "name": "@surveystudio/desktop",
+  "version": "0.4.0",
+  "private": true,
+  "description": "SurveyStudio Pro: native Offline-Umfragen mit SQLCipher und Windows-Installer",
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.4"
+  },
+  "scripts": {
+    "dev": "tauri dev",
+    "bundle": "tauri build"
+  }
+}

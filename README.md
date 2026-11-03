@@ -1,110 +1,99 @@
-# SurveyStudio Pro – Entwicklungsprojekt v0.1.0
+# SurveyStudio Pro
 
-**Tatsächlich implementiertes Software-Grundgerüst mit Fragebogen-Designer.** Dieses Repository ist ein startbares Webprojekt, **keine vollständig produktionsfertige Software** und **noch keine Desktop-Anwendung**. Die Phasen P1–P3 des Pflichtenhefts stehen aus.
+Entwicklungsprojekt einer deutschen Umfrageplattform mit React/TypeScript, NestJS, PostgreSQL und Tauri-/SQLite-Adapter. Die vorhandenen Fehler wurden bearbeitet und zahlreiche P0-/P1-Funktionen ergänzt. **Das gesamte Pflichtenheft und eine Produktversion 1.0 sind noch nicht vollständig umgesetzt oder abgenommen.** Der vollständige Abgleich steht in [ANFORDERUNGSPRUEFUNG.md](docs/ANFORDERUNGSPRUEFUNG.md).
 
-## Was ist bereits enthalten?
+## In diesem Stand nutzbar
 
-- **React + TypeScript + Vite:** Deutsche Benutzeroberfläche, Anmeldung, Dashboard, Fragenbibliothek, Drei-Spalten-Designer, Eigenschaften- und Designeditor, Drag-and-Drop, Pfeiltasten-Reihenfolge, Duplizieren/Löschen, Rückgängig/Wiederholen, Vorschau, Fragebogenansicht und Ergebnisdashboard.
-- **Neun Fragetypen:** Kurztext, Langtext, Zahl, E-Mail, Datum, Ja/Nein, Einfachauswahl, Mehrfachauswahl, Dropdown.
-- **Gestaltung:** Farben, fünf Schriftfamilien/Fallbacks, Logo/Hintergrundbild (PNG/JPG/WebP bis 1,4 MB), Fragefett/-kursiv und Textfarben, individuelle Begrüßungs-/Abschlusstexte, Hilfetexte, Pflichtfelder und Antwortoptionen.
-- **NestJS API:** Registrierung/Anmeldung, sichere Passworthashes, HttpOnly-Sitzungscookies mit CSRF-Prüfung, Projektmitgliedschaft, serverseitige Rechte, Fragebogen-Speicherung mit Revisionskontrolle, Veröffentlichung, öffentliche Teilnahmeseite und serverseitige Antwortvalidierung.
-- **PostgreSQL:** Versionierte SQL-Migration, Organisationen, Benutzer, Projekte, Mitgliedschaften, Umfrageentwürfe, unveränderliche Veröffentlichungssnapshots, Antwortsitzungen, Antworten und Audit-Grundstruktur.
-- **Freigabe:** Jeder Veröffentlichungsvorgang erzeugt einen eigenen Link und QR-Code (PNG). Antwortübermittlung ist über eine Idempotenz-ID gegen doppelte Speicherung geschützt.
-- **Auswertung:** Automatische Anzahl, Einfach-/Mehrfachauswahl als Balken, Ja/Nein, numerischer Mittelwert; für andere Typen nur Antwortanzahl. Die Auswertung bezieht sich auf die neueste Veröffentlichungsversion.
-- **Gemeinsamer Schema-/Validierungskern** unter `packages/shared`, mit Node-Tests.
+- Anmeldung, Registrierung, widerrufbare Sitzungen, CSRF, Passwort-Reset und E-Mail-Verifikation mit einmaligen Tokens; verschlüsselte Nachrichtenwarteschlange und konfigurierbarer SMTP/TLS-Transport.
+- Arbeitsbereiche, verschachtelte Projektordner, Owner/Editor/Viewer/Analyst/Gast, serverseitige Rechte und geschütztes Audit.
+- Fragebogendesigner mit Reihenfolge, Kopieren/Löschen, Undo/Redo, Autosave, Revisionskonflikten, Umfragekopien, Archivierung, Versionshistorie und Kommentaren.
+- **Variable Hintergründe:** Farbfläche, Verlauf, Punkte/Raster/Diagonalen, eigenes Bild, Skalierung, Position, Überlagerung und Formular-Deckkraft. Designer, Vorschau und veröffentlichte Formulare verwenden dieselbe Darstellung.
+- **19 Fragetypen:** Kurz-/Langtext, Zahl, E-Mail, Datum, Ja/Nein, Einfach-/Mehrfachauswahl, Dropdown, Sterne, Slider, NPS, Likert, zwei Matrixtypen, Ranking, Bildauswahl, Datei-Upload und Terminwahl.
+- Mehrere Seiten, Fortschritt, bedingte Sichtbarkeit/Pflichtfelder, UND/ODER und geprüfte Vorwärtssprünge. Ausgeblendete/übersprungene Fragen blockieren nicht und ihre Antworten werden vor dem Speichern entfernt.
+- Kopf-/Fußzeilen, Begrüßung/Abschluss mit sicherer einfacher Fett-/Kursivformatierung; kein ausführbares HTML.
+- Veröffentlichung mit unveränderlichen Snapshots, Link, PNG-/SVG-QR, Beginn/Ende, Pause, Schließen und Antwortlimit. Validierte Abgaben sind auch bei parallelen Retries idempotent.
+- Versionierbare Auswertungen, Tabellen, Balken/Kreis/Donut, Zeitverlauf, Mittelwert/Median/Standardabweichung/NPS, Matrix-/Rankingauswertung; Diagrammexport SVG/PNG.
+- Asynchrone CSV-/XLSX-/PDF-Exports mit Unicode-Schriften und berechtigten, zeitlich begrenzten Downloads.
+- Getrennte Ergebnislinks mit widerrufbaren Tokens, unveränderlichem Ergebnisstand und vollständiger Unterdrückung kleiner Zellen. Keine öffentlichen Rohdaten und keine öffentlichen Datenfilter.
+- Teilnehmerimport CSV/XLSX mit Duplikatvorschau; verschlüsselte Identitäten, Einladungswarteschlange, Auskunft/Berichtigung/Löschung. Anonyme Einladungen verwenden einen gemeinsamen Link und keine individuelle Abschlussverfolgung.
+- Anonyme/pseudonyme/personenbezogene Modi, getrennte Zuordnung, Löschfristen und versionierte Bestätigung. Produktivveröffentlichung verlangt Verantwortlichen, Kontakt, Zweck, Rechtsgrundlage und Hinweisversion.
+- Decodierte/neu kodierte Rasterbilder mit Größen-/Pixellimit, entfernten Metadaten und kontrollierter Bereitstellung.
+- Lokaler SQLite-Adapter mit persistenten Projekten, Entwürfen, Abgaben, Ergebnissen und CSV; manuelle HTTPS-Synchronisation mit Gerätezugängen, Warteschlange, Retry und Konfliktanzeige. Importierte Internetfreigaben bleiben zunächst pausiert.
+- AES-GCM-Backups für die lokale Docker-Datenbank und Wiederherstellung in eine neue Datenbank; vollständiges App-Dockerfile und Produktions-Compose.
 
-## Voraussetzungen
+## Lokal starten
 
-1. **Node.js 22 LTS oder neuer** und npm.
-2. **Docker Desktop** (Windows/macOS) bzw. Docker Engine + Compose (Linux) für eine lokale PostgreSQL-Datenbank; alternativ eine selbst eingerichtete PostgreSQL-16+-Instanz.
-3. Für erstmaliges `npm install` eine Internetverbindung zur npm Registry.
-4. Freie Ports: **5173** (Web), **3001** (API), **5432** (Datenbank).
+Voraussetzungen: Node.js **ab 22.14**, pnpm **10.11.0**, Docker Engine/Desktop mit Compose. pnpm bei Bedarf mit `npm install --global pnpm@10.11.0` installieren. Freie Ports: 5432, 3001, 5173.
 
-> Die hier ausgelieferte ZIP-Datei enthält den Quellcode und Tests, **keine `node_modules`** und keine fertige Windows-EXE. Die Paketinstallation war in der Erstellungsumgebung nicht möglich (npm-Registry nicht erreichbar). Deshalb konnte die komplette React-/NestJS-Anwendung hier nicht gestartet oder als vollständig getestet ausgewiesen werden. Die paketfreien Kernlogiktests wurden geprüft; siehe `docs/TESTBERICHT.md`.
+Im Repository-Verzeichnis:
 
-## In wenigen Schritten starten
-
-Öffne ein Terminal im entpackten Projektordner:
-
-```bash
-# 1) Abhängigkeiten installieren
-npm install
-
-# 2) Konfiguration anlegen
-cp .env.example .env
-
-# 3) JWT_SECRET in .env durch einen mindestens 32 Zeichen langen Zufallswert ersetzen.
-# Beispiel für einen Zufallswert auf macOS/Linux:
-node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
-
-# 4) PostgreSQL lokal starten
-docker compose up -d
-
-# 5) Datenbanktabellen anlegen
-npm run db:migrate
-
-# 6) Terminal A – NestJS API starten
-npm run dev:api
-
-# 7) Terminal B – React-Weboberfläche starten
-npm run dev:web
+```sh
+pnpm install --frozen-lockfile
+node scripts/configure-local.cjs
+pnpm run build
+docker compose up -d --wait
+pnpm run db:migrate
+pnpm run dev:api
 ```
 
-Unter Windows PowerShell `.env.example` so kopieren:
+In einem zweiten Terminal:
 
-```powershell
-Copy-Item .env.example .env
+```sh
+pnpm run dev:web
 ```
 
-**Anwendung:** http://localhost:5173
+Die Weboberfläche liegt unter `http://localhost:5173`. Registrieren, Projekt wählen, Umfrage erstellen und über **Design** gestalten. **Verwalten** öffnet Veröffentlichung, Kommentare, Historie, Teilnehmer und Ergebnisfreigaben. **Auswertung** bietet Versionswahl und Exporte.
 
-Registriere dort ein neues Konto. Bei der Registrierung werden automatisch ein Arbeitsbereich und ein Beispielprojekt angelegt. Lege dann eine Umfrage an, füge Fragen hinzu und teste den Designer.
+Die ignorierte `.env` bleibt lokal. Das Konfigurationsskript erzeugt bei Neuanlage getrennte zufällige Sitzungs-/Datenschlüssel und überschreibt bestehende Installationen nicht. Alte Entwicklungsinstallationen ohne `DATA_ENCRYPTION_KEY` verwenden weiterhin ihren bisherigen Schlüsselpfad; dessen Änderung erfordert eine kontrollierte Datenmigration. **Keine Schlüssel austauschen, ohne verschlüsselte Daten und Wiederherstellung zu berücksichtigen.**
+
+## E-Mail und Produktivbetrieb
+
+Ohne SMTP-Konfiguration werden Nachrichten vorbereitet und im lokalen Entwicklungspostfach unter **Konto und Nachrichten** angezeigt. Das beweist keinen externen Versand. In Produktion ist dieses Postfach abgeschaltet; nicht verifizierte Konten erhalten keinen normalen Arbeitsbereichszugriff.
+
+Mailtransport konfigurieren über geschützte Umgebungseinstellungen: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`. Port 587 verlangt STARTTLS, Port 465 direktes TLS; Zertifikatsprüfung bleibt aktiv. Der Betreiber muss die konfigurierte Absenderidentität und SPF/DKIM/DMARC tatsächlich autorisieren. Beliebige From-Adressen können Nutzer nicht frei einsetzen. Provider-OAuth, eigene Absender pro Organisation, Bounces und Erinnerungsplanung sind noch offen.
+
+`docker-compose.prod.yml` verlangt sichere Werte für Datenbankkennwort, `JWT_SECRET`, `DATA_ENCRYPTION_KEY` und die tatsächlichen HTTPS-Origins. Ein TLS-Reverse-Proxy gehört vor die an Host-Loopback gebundene Anwendung. SMTP-/Produktivgeheimnisse nicht ins Repository oder in Chatnachrichten schreiben.
+
+```sh
+docker compose -f docker-compose.prod.yml build
+docker compose -f docker-compose.prod.yml up -d
+```
+
+In der verwalteten Cloud beim Imagebau zusätzlich das bereitgestellte CA-Zertifikat als Build-Secret übergeben; siehe [BETRIEB.md](docs/BETRIEB.md). Das Image enthält Weboberfläche, API, SQL-Migrationen und Schriften. Die Startanweisung führt Migrationen vor dem API-Start aus.
 
 ## Tests
 
-```bash
-npm test                   # Node-Kernlogik- und statische Projektvertragsprüfungen; ohne npm install möglich
-npm run build              # kompiliert API und Web (erst nach npm install)
-npm run check              # Tests + Builds
+```sh
+pnpm test                         # Paket-/API-/Web-Builds und einzelne Kern-/Vertragstests
+pnpm exec playwright install chromium
+pnpm run test:integration          # echte PostgreSQL-, HTTP-, Export- und Browsertests
+pnpm run test:load                 # separater Lasttest mit 100.000 Sitzungen / 3 Mio. Antworten
+node scripts/check-backup.cjs      # lokaler Docker-Backup-/Restore-Roundtrip
 ```
 
-Die Tests für die Datenbank und die End-to-End-Browserabläufe können erst nach Installation der externen Abhängigkeiten sowie Start einer PostgreSQL-Instanz ausgeführt werden. Testvorlagen und manuelle Abnahmefälle: `docs/TESTPLAN.md`.
+Für die PDF-Inhaltsprüfung muss `pdftotext` verfügbar sein (Linux-Paket `poppler-utils`). Playwright benötigt auf Linux gegebenenfalls `pnpm exec playwright install --with-deps chromium`.
 
-## Projektstruktur
+Die Integrationstests legen ein zufälliges PostgreSQL-Schema und eigene temporäre Dateien an und entfernen diese anschließend. Sie starten eigene API-/Vite-Prozesse; Ports 3101/5173 müssen frei sein. Der separate Lasttest verwendet 3103/5174 und belegt vorübergehend zusätzlichen Datenbankplatz für synthetische Daten. Keine echten Teilnehmerdaten werden verwendet.
 
-```text
-apps/web/                    React-Oberfläche (Vite)
-apps/web/src/Designer.tsx    Visueller Fragebogen-Designer
-apps/web/src/SurveyForm.tsx  Vorschau / öffentliches Formular
-apps/web/src/Results.tsx     Ergebnisdashboard / öffentliche Teilnahme
-apps/api/                    NestJS REST API
-apps/api/src/auth.ts         Registrierung, Login, Sitzungen und CSRF
-apps/api/src/surveys.ts      Umfragen, Entwürfe, Veröffentlichung, Aggregate
-apps/api/src/public.ts       Öffentliche Umfrage und idempotente Antwortabgabe
-packages/shared/             Gemeinsame Schema- und Antwortvalidierung
-db/migrations/               Versionierte PostgreSQL-Schemata
-db/migrate.cjs               Migration-Runner (mit SHA256-Veränderungsschutz)
-docs/                        Architektur, Tests und Einschränkungen
+[Testbericht](docs/TESTBERICHT.md), [letzte Ausgaben](docs/TESTLAUF_AUSGABE.txt) und [Hintergrundvorschau](docs/screenshots/background-preview.png) enthalten die Nachweise. Die Desktop-Pipeline baut Windows-Pakete und führt eine Installations-/Startprüfung aus. Der aktuelle Ausführungsnachweis steht beim jeweiligen GitHub-Release; historische lokale Testausgaben gelten für ihren dokumentierten Quellstand.
+
+## Desktop
+
+Windows-x64-Vorabversion 0.4.0: [Installationsanleitung](docs/INSTALLATION_WINDOWS.md), [Fehlerkorrekturen und Buildprüfung](docs/DESKTOP_0_4_0.md). Downloadpakete werden über [GitHub Releases](https://github.com/Sarkissian198927/SurveyStudio-Pro/releases) bereitgestellt; `build-manifest.json` und SHA256-Prüfsummen ordnen sie dem geprüften Quellstand zu.
+
+Der Quellcode liegt unter `apps/desktop`, die echte SQLite-Domänenschicht unter `packages/desktop-store`.
+
+```sh
+pnpm --filter @surveystudio/desktop dev
+pnpm --filter @surveystudio/desktop exec tauri build -- --locked
 ```
 
-## Sicherheitshinweise für echten Produktivbetrieb
+Benötigt werden Rust sowie die Tauri-Systemvoraussetzungen der Zielplattform. Der Rust-Code wurde unter Linux mit GTK/WebKit und Cargo-Lockfile geprüft. `.github/workflows/desktop.yml` ergänzt unter Windows einen echten Schlüsselbundtest, EXE/MSI-Build und Installations-/Fensterstarttest. Vollständige manuelle Windows-GUI-Abnahme steht separat aus.
 
-**Nicht ohne weitere Maßnahmen öffentlich mit echten sensiblen Teilnehmerdaten bereitstellen.** Vor Produktivbetrieb fehlen bzw. erfordern Prüfung: Rate Limiting und Spam-/Abuse-Schutz, Mailverifikation und Passwort-Reset, dezidiertes Asset-Storage statt eingebetteter Bilddaten, Mandanten-Isolationstests, sichere Reverse-Proxy-/TLS-Konfiguration, automatisierte Löschjobs und Backups, Monitoring und Notfallplanung, Threat Modeling, Penetrationstests, vollständige Datenschutzprozesse, Unterdrückung kleiner Ergebnisgruppen, datenschutzrechtlich geprüfte Protokollierung sowie Last- und Barrierefreiheitstests. Außerdem sind externe Datenbankzugänge, Geheimnisse, Passwortrichtlinien und Hostingkonfigurationen entsprechend zu härten.
+**Die native Datenbank verwendet SQLCipher und einen zufälligen Schlüssel im Betriebssystem-Schlüsselbund.** Ohne verfügbaren Schlüsselbund/Schlüssel gibt es keinen Klartextfallback. Dateiverschlüsselung und Wiederöffnung wurden nativ unter Linux geprüft; der echte Schlüsselbundanbieter und die Windows-GUI noch nicht. Persönliche/pseudonyme lokale Veröffentlichungen bleiben wegen fehlender lokaler Identitätsverwaltung blockiert. Lokal sind CSV und grundlegende Auswertungen vorhanden; vollständige XLSX/PDF-Ausgabe, Sync-Pull, automatische Synchronisation, Lösch-Tombstones und Windows-Abnahme fehlen. Datenbank und Schlüssel müssen zusammen gesichert werden.
 
-**Wichtiger Hinweis zur Anonymität:** Dieses Entwicklungsprojekt speichert in anonymen Fragebögen keinen Benutzer- oder Einladungsschlüssel bei Antworten; trotzdem können Freitextinhalte und der Zugriff auf Serverlogs eine Identifikation erlauben. Die Anwendung garantiert noch keine wirksame Anonymität unter sämtlichen Einsatzbedingungen.
+## Noch nicht vollständig
 
-## Nächste Implementierungsschritte
+Unter anderem: strukturierter Rich-Text-Inhaltsbaum, vollständiger Dashboard-Builder, Aufgaben-/Sperrenverwaltung, bidirektionale Offline-Synchronisation, vollständige Lokalisierung, Echtzeit-Coauthoring, Kapazitäten/Wartelisten/Storno, Berechnungen/Piping/Randomisierung, Webhooks/BI, erweiterte Versionsvergleiche, KI und Enterprise-SSO/SCIM. Auch manuelle WCAG-/Screenreader-Prüfungen, ASVS-Gesamtabnahme, echte Mailzustellung, Produktions-RPO/RTO und Betriebs-SLA sind nicht nachgewiesen.
 
-1. Technische Integrationstests/End-to-End-Tests gegen PostgreSQL und Browser erstellen und ausführen.
-2. Rich-Text-Editor mit sicherer struktureller Darstellung und serverseitiger Sanitization.
-3. Mehrseitige Fragebögen, Verzweigungslogik, zusätzliche Fragetypen, Schema-Migration.
-4. Mehrbenutzer-Kollaboration und feingranulare Bericht-Freigaben.
-5. CSV/XLSX/PDF-Export und Ergebnislinks/QR-Codes.
-6. Desktop-/Offline-Version mittels Tauri/SQLite einschließlich geprüfter Synchronisation.
-7. Vollständige Datenschutz- und Betriebsfreigabe.
-
-Details und Entscheidungen: `docs/ARCHITEKTUR.md`, `docs/TESTPLAN.md`, `docs/UMSETZUNGSSTATUS.md`.
-
-## Sofort ausprobieren – ohne Installation
-
-Öffne **`demo/SurveyStudio_Designer_Demo.html`** direkt im Browser (Doppelklick). Diese bewusst separate Offline-Demo benötigt **weder Docker noch npm**. Sie unterstützt neun Fragetypen, Fragebearbeitung, Reihenfolge, Farbgestaltung, Live-Vorschau sowie einen lokal im Browser gespeicherten Entwurf und JSON-Export/-Import. **Wichtig:** Die Demo verwendet nur Browser-Speicherung, hat keine Benutzerverwaltung, keine serverseitige Antwortspeicherung und erstellt keine teilbaren Umfragelinks. Für den eigentlichen Webbetrieb die oben beschriebenen Installationsschritte verwenden.
+Der vollständige Quellcode ist entpackt bearbeitet; historische ZIP-Dateien und Pflichtenheft bleiben unverändert. Keine Freigabe als „SurveyStudio Pro 1.0“ und keine pauschale Datenschutz-/Produktivzertifizierung.
