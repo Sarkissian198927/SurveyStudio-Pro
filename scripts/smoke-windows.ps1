@@ -7,6 +7,12 @@ $previousBrowserArguments=$env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS
 $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS='--remote-debugging-port=9222'
 $app=$null;$fixture=$null;$ca=$null;$serverCertificate=$null
 function Stop-TestApp($process){if($null -ne $process -and !$process.HasExited){$process.CloseMainWindow() | Out-Null;if(!$process.WaitForExit(10000)){$process.Kill()}}}
+function Install-TestPackage($file) {
+ Write-Output ('Installing test package: '+[System.IO.Path]::GetFileName($file))
+ $setup=Start-Process -FilePath $file -ArgumentList "/S /D=$installPath" -PassThru
+ if(!$setup.WaitForExit(180000)){$setup.Kill();throw 'Installer did not finish within three minutes.'}
+ if($setup.ExitCode -ne 0){throw ("Installer exited with code "+$setup.ExitCode)}
+}
 function Start-TestApp {
  $exe=Get-ChildItem $installPath -Recurse -Filter 'surveystudio-desktop.exe' | Select-Object -First 1
  if(!$exe){throw 'Installed app not found.'}
@@ -19,14 +25,13 @@ try {
  $oldInstaller=Join-Path $env:RUNNER_TEMP 'SurveyStudio-0.4-setup.exe'
  Invoke-WebRequest -UseBasicParsing -Uri 'https://github.com/Sarkissian198927/SurveyStudio-Pro/releases/download/v0.4.0-preview.1/SurveyStudio-Pro-0.4.0-Windows-x64-setup.exe' -OutFile $oldInstaller
  if((Get-FileHash $oldInstaller -Algorithm SHA256).Hash.ToLowerInvariant() -ne '957c1eda815af67ad2d9c2e715fe34fdc3636d79aad47a55b70641d8c7f4faeb'){throw 'Previous installer checksum mismatch.'}
- $setup=Start-Process -FilePath $oldInstaller -ArgumentList "/S /D=$installPath" -Wait -PassThru
- if($setup.ExitCode -ne 0){throw 'Previous installation failed.'}
+ Install-TestPackage $oldInstaller
+ Write-Output 'Starting installed version 0.4 and preparing upgrade data.'
  $app=Start-TestApp
  node scripts/smoke-windows-ui.cjs --seed-old
  if($LASTEXITCODE -ne 0){throw 'Previous-version data preparation failed.'}
  Stop-TestApp $app;$app=$null
- $setup=Start-Process -FilePath $installer.FullName -ArgumentList "/S /D=$installPath" -Wait -PassThru
- if($setup.ExitCode -ne 0){throw 'Upgrade installation failed.'}
+ Install-TestPackage $installer.FullName
  # Ephemeral local TLS fixture. No production CA/key is bundled or uploaded.
  $testDir=Join-Path $env:RUNNER_TEMP 'surveystudio-tls-fixture';New-Item -ItemType Directory -Force $testDir | Out-Null
  $ca=New-SelfSignedCertificate -Type Custom -Subject "CN=SurveyStudio CI Root $([guid]::NewGuid())" -CertStoreLocation Cert:\CurrentUser\My -KeyUsage CertSign,CRLSign,DigitalSignature -KeyAlgorithm RSA -KeyLength 2048 -KeyExportPolicy Exportable -TextExtension @('2.5.29.19={critical}{text}ca=1&pathlength=0') -NotAfter (Get-Date).AddDays(2)
@@ -38,6 +43,7 @@ try {
  Start-Sleep -Seconds 2
  if($fixture.HasExited){throw 'Local HTTPS fixture failed to start.'}
  $edgePolicy='HKCU:\Software\Policies\Microsoft\Edge';New-Item -Path $edgePolicy -Force | Out-Null;New-ItemProperty -Path $edgePolicy -Name HideFirstRunExperience -Value 1 -PropertyType DWord -Force | Out-Null
+ Write-Output 'Starting upgraded version 0.5 for native functional checks.'
  $app=Start-TestApp
  node scripts/smoke-windows-ui.cjs
  if($LASTEXITCODE -ne 0){throw 'Native Windows functional checks failed.'}
