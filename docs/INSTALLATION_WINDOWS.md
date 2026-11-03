@@ -25,6 +25,8 @@ Es ist noch kein Hosting eingerichtet. Die App enthält deshalb keine vorgetäus
 
 Die Anwendung verwendet dieselbe App-Kennung und denselben lokalen Datenbankpfad. Das Setup kann die bestehende Installation aktualisieren. Die Pipeline prüft dies mit einer in Version 0.4 angelegten verschlüsselten Umfrage. Schlüssel und Windows-Benutzerprofil müssen erhalten bleiben.
 
+Für eine skriptgesteuerte stille Aktualisierung das Setup mit `/S /UPDATE` starten. `/UPDATE` verwendet den vorgesehenen NSIS-Aktualisierungsmodus und vermeidet einen interaktiven Deinstallationsdialog der Altversion. Die normale Installation per Doppelklick benötigt keine Kommandozeilenschalter.
+
 ## Daten und Grenzen
 
 Die Datenbank ist mit SQLCipher verschlüsselt; ihr zufälliger Schlüssel liegt im Windows-Anmeldeinformationsspeicher. Datenbankdatei und Schlüssel gehören zusammen. Die Datei allein genügt nicht zur Wiederherstellung auf einem anderen Gerät. Wichtige Ergebnisse zusätzlich exportieren; vor Deinstallation oder Wechsel des Windows-Profils eine vollständige Sicherungsstrategie festlegen.

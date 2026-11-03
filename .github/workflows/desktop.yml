@@ -94,6 +94,7 @@ jobs:
       - name: Build NSIS and MSI installers
         run: pnpm --filter @surveystudio/desktop exec tauri build --target x86_64-pc-windows-msvc --no-sign -- --locked
       - name: Install, upgrade and exercise the packaged app
+        timeout-minutes: 10
         shell: powershell
         run: ./scripts/smoke-windows.ps1
       - name: Functional check diagnostics

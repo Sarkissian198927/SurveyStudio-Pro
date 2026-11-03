@@ -1,1 +1,19 @@
-{"identifier":"desktop","windows":["main"],"permissions":["core:default","dialog:allow-save","fs:allow-write-file"]}
+{
+  "identifier": "desktop",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default",
+    "dialog:allow-save",
+    "fs:allow-write-file",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [
+        {
+          "url": "https://github.com/Sarkissian198927/SurveyStudio-Pro/releases/*"
+        }
+      ]
+    }
+  ]
+}

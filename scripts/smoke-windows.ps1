@@ -7,9 +7,13 @@ $previousBrowserArguments=$env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS
 $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS='--remote-debugging-port=9222'
 $app=$null;$fixture=$null;$ca=$null;$serverCertificate=$null
 function Stop-TestApp($process){if($null -ne $process -and !$process.HasExited){$process.CloseMainWindow() | Out-Null;if(!$process.WaitForExit(10000)){$process.Kill()}}}
-function Install-TestPackage($file) {
+function Install-TestPackage($file,[switch]$Upgrade) {
  Write-Output ('Installing test package: '+[System.IO.Path]::GetFileName($file))
- $setup=Start-Process -FilePath $file -ArgumentList "/S /D=$installPath" -PassThru
+ # NSIS /UPDATE retains the existing installation and skips the interactive old uninstaller.
+ $info=New-Object System.Diagnostics.ProcessStartInfo
+ $info.FileName=$file;$info.UseShellExecute=$false
+ $info.Arguments=if($Upgrade){"/S /UPDATE /D=$installPath"}else{"/S /D=$installPath"}
+ $setup=[System.Diagnostics.Process]::Start($info)
  if(!$setup.WaitForExit(180000)){$setup.Kill();throw 'Installer did not finish within three minutes.'}
  if($setup.ExitCode -ne 0){throw ("Installer exited with code "+$setup.ExitCode)}
 }
@@ -33,7 +37,7 @@ try {
  Write-Output 'Closing version 0.4 before upgrade.'
  Stop-TestApp $app;$app=$null
  Write-Output 'Version 0.4 stopped; upgrading installation.'
- Install-TestPackage $installer.FullName
+ Install-TestPackage $installer.FullName -Upgrade
  # Ephemeral local TLS fixture. No production CA/key is bundled or uploaded.
  $testDir=Join-Path $env:RUNNER_TEMP 'surveystudio-tls-fixture';New-Item -ItemType Directory -Force $testDir | Out-Null
  $ca=New-SelfSignedCertificate -Type Custom -Subject "CN=SurveyStudio CI Root $([guid]::NewGuid())" -CertStoreLocation Cert:\CurrentUser\My -KeyUsage CertSign,CRLSign,DigitalSignature -KeyAlgorithm RSA -KeyLength 2048 -KeyExportPolicy Exportable -TextExtension @('2.5.29.19={critical}{text}ca=1&pathlength=0') -NotAfter (Get-Date).AddDays(2)
