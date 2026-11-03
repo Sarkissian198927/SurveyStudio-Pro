@@ -46,6 +46,10 @@
     },
     "resources": {
       "../../../docs/THIRD_PARTY_NOTICES.txt": "THIRD_PARTY_NOTICES.txt"
-    }
+    },
+    "icon": [
+      "icons/icon.ico",
+      "icons/icon.png"
+    ]
   }
 }
