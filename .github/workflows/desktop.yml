@@ -35,9 +35,24 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
       - run: sudo apt-get update && sudo apt-get install -y poppler-utils
+      - name: Validate Windows automation scripts
+        shell: pwsh
+        run: |
+          foreach ($file in @('scripts/smoke-windows.ps1','scripts/save-windows-dialog.ps1')) {
+            $tokens=$null; $parseErrors=$null
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file),[ref]$tokens,[ref]$parseErrors) | Out-Null
+            if ($parseErrors.Count) { throw ($parseErrors | Out-String) }
+          }
       - run: pnpm test
       - run: pnpm run test:integration
       - run: pnpm run test:desktop-ui
+      - name: Prepare self-hosted HTTPS server package
+        run: node scripts/package-server.cjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SurveyStudio-Pro-0.5.0-Server
+          path: artifacts/server/*
+          if-no-files-found: error
   windows:
     runs-on: windows-2022
     timeout-minutes: 60
@@ -69,14 +84,21 @@ jobs:
         run: pnpm run build:desktop
       - name: Native transactions, encrypted storage and actual Windows credential store
         working-directory: apps/desktop/src-tauri
-        run: cargo test --release --locked --target x86_64-pc-windows-msvc storage::tests
+        run: cargo test --release --locked --target x86_64-pc-windows-msvc
       - name: Collect third-party license texts
         run: node scripts/third-party-notices.cjs
       - name: Build NSIS and MSI installers
         run: pnpm --filter @surveystudio/desktop exec tauri build --target x86_64-pc-windows-msvc --no-sign -- --locked
-      - name: Install and launch the packaged app
-        shell: pwsh
+      - name: Install, upgrade and exercise the packaged app
+        shell: powershell
         run: ./scripts/smoke-windows.ps1
+      - name: Functional check diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows-functional-diagnostics
+          path: artifacts/diagnostics/*
+          if-no-files-found: ignore
       - name: Collect installers and checksums
         shell: pwsh
         run: |
@@ -87,10 +109,10 @@ jobs:
           Copy-Item docs/INSTALLATION_WINDOWS.md artifacts/desktop/INSTALLATION_WINDOWS.md
           $checksums = Get-ChildItem artifacts/desktop -File | Sort-Object Name | ForEach-Object { '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant(), $_.Name }
           $checksums | Set-Content artifacts/desktop/SHA256SUMS.txt -Encoding utf8
-          @{ version='0.4.0'; commit=$env:GITHUB_SHA; platform='windows-x86_64'; unsigned=$true; nativeTests='storage::tests'; installerSmoke='passed'; runUrl="https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID" } | ConvertTo-Json | Set-Content artifacts/desktop/build-manifest.json -Encoding utf8
+          @{ version='0.5.0'; commit=$env:GITHUB_SHA; platform='windows-x86_64'; unsigned=$true; nativeTests='storage::tests'; installerSmoke='passed'; runUrl="https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID" } | ConvertTo-Json | Set-Content artifacts/desktop/build-manifest.json -Encoding utf8
       - uses: actions/upload-artifact@v4
         with:
-          name: SurveyStudio-Pro-0.4.0-Windows-x64
+          name: SurveyStudio-Pro-0.5.0-Windows-x64
           path: artifacts/desktop/*
           if-no-files-found: error
           retention-days: 30

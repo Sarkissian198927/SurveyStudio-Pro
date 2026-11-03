@@ -14,7 +14,7 @@
     "test": "pnpm run build && pnpm run test:unit",
     "db:migrate": "pnpm --filter @surveystudio/api db:migrate",
     "check": "pnpm test && pnpm run test:integration",
-    "test:unit": "node --test --test-isolation=none packages/shared/shared.test.cjs packages/shared/features.test.cjs tests/project-contracts.test.cjs tests/permissions.test.cjs tests/desktop.test.cjs tests/dependencies.test.cjs",
+    "test:unit": "node --test --test-isolation=none packages/shared/shared.test.cjs packages/shared/features.test.cjs tests/project-contracts.test.cjs tests/permissions.test.cjs tests/desktop.test.cjs tests/dependencies.test.cjs tests/online-config.test.cjs",
     "test:integration": "pnpm run build && node --test --test-isolation=none --test-concurrency=1 tests/integration.test.cjs",
     "build:packages": "pnpm -r --filter \"./packages/**\" --fail-if-no-match --if-present run build",
     "backup": "node scripts/backup.cjs",
@@ -22,7 +22,7 @@
     "test:container": "node scripts/check-container.cjs",
     "test:backup": "node scripts/check-backup.cjs",
     "build:desktop": "pnpm run build:packages && pnpm --filter @surveystudio/web build",
-    "test:desktop-ui": "node --test --test-isolation=none tests/desktop-ui.test.cjs"
+    "test:desktop-ui": "node --test --test-isolation=none --test-concurrency=1 tests/desktop-ui.test.cjs tests/desktop-areas.test.cjs"
   },
   "engines": {
     "node": ">=22.14.0"

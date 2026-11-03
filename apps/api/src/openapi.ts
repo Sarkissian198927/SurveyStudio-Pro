@@ -23,7 +23,7 @@ function operation(summary:string,status:number,response:Schema,body?:Schema,par
 const pathId=(name='id')=>({in:'path',name,required:true,schema:id});
 const ok=object({ok:{type:'boolean'}});
 export const openApi={
-  openapi:'3.0.3',info:{title:'SurveyStudio Pro – I-01 API',version:'0.3.0',description:'Dokumentiert den geprüften Identitäts-/Projektkern. Feature-Endpunkte sind enthalten; fachliche Body-Prüfung bleibt maßgeblich.'},
+  openapi:'3.0.3',info:{title:'SurveyStudio Pro API',version:'0.5.0',description:'Dokumentiert den geprüften Identitäts-/Projektkern. Feature-Endpunkte sind enthalten; fachliche Body-Prüfung bleibt maßgeblich.'},
   servers:[{url:'/api/v1'}],components:{securitySchemes:{sessionCookie:{type:'apiKey',in:'cookie',name:'survey_session'}}},
   paths:{
     '/auth/register':{post:operation('Registrierung mit Arbeitsbereich und Projekt',201,session,object({displayName:string(120),email:{type:'string',format:'email',maxLength:320},password:{type:'string',minLength:12,maxLength:72,description:'Maximal 72 UTF-8-Bytes'}}),[],true)},
@@ -53,6 +53,6 @@ Object.assign(openApi.paths,extra);
 @Controller()
 export class InfrastructureController {
   constructor(private readonly db:Database) {}
-  @Public() @Get('health') async health() {await this.db.query('SELECT 1');return {status:'ok'};}
+  @Public() @Get('health') async health() {await this.db.query('SELECT 1');return {status:'ok',service:'surveystudio-pro',version:'0.5.0',apiVersion:'1'};}
   @Public() @Get('openapi.json') spec() {return openApi;}
 }

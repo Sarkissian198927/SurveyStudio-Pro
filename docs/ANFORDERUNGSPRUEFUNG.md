@@ -1,6 +1,6 @@
 # Anforderungsprüfung – SurveyStudio Pro
 
-Stand: 03.11.2026. Quelle: `SurveyStudio_Pro_Pflichtenheft_v1_0.docx`, Version 1.0. Der aktuelle Nutzerauftrag erweitert die ursprünglich auf I-01 begrenzte Arbeit auf Fehlerbehebung und Integration der Funktionen. Der folgende Abgleich dokumentiert den Ausgangsstand. Der anschließende Auftrag erlaubt ausdrücklich eine GitHub-Desktopbereitstellung; deren Änderungen und Prüfungen stehen in [DESKTOP_0_4_0.md](DESKTOP_0_4_0.md).
+Stand: 03.11.2026. Quelle: `SurveyStudio_Pro_Pflichtenheft_v1_0.docx`, Version 1.0. Der aktuelle Nutzerauftrag erweitert die ursprünglich auf I-01 begrenzte Arbeit auf Fehlerbehebung und Integration der Funktionen. Der folgende Abgleich dokumentiert den Ausgangsstand. Der anschließende Auftrag erlaubt ausdrücklich eine GitHub-Desktopbereitstellung; deren historische Änderungen und Prüfungen stehen in [DESKTOP_0_4_0.md](DESKTOP_0_4_0.md). Die erneute Bedienungsprüfung und Version 0.5 sind in [DESKTOP_0_5_0.md](DESKTOP_0_5_0.md) dokumentiert; dessen Windows-Nachweis steht im jeweiligen Release-Manifest.
 
 **Das gesamte Pflichtenheft ist noch nicht erfüllt.** Die Tabellen unterscheiden vorhandene Funktion, technischen Nachweis und verbleibende Implementierung/Abnahme. Implementiert bedeutet keine Produktiv-, Datenschutz- oder Sicherheitsfreigabe. Alle Tests verwenden synthetische Daten.
 

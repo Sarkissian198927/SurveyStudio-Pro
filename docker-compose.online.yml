@@ -1,0 +1,59 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: surveystudio
+      POSTGRES_USER: survey
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Serverkonfiguration mit setup-online.cjs erzeugen}
+    volumes: [online_pg:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U survey -d surveystudio]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+  app:
+    image: surveystudio-pro:server-0.5.0
+    build: .
+    command: [sh, -c, 'node db/migrate.cjs && node scripts/bootstrap-admin.cjs && node apps/api/dist/main.js']
+    depends_on:
+      postgres: {condition: service_healthy}
+    environment:
+      PGHOST: postgres
+      PGDATABASE: surveystudio
+      PGUSER: survey
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Datenbankpasswort fehlt}
+      JWT_SECRET: ${JWT_SECRET:?Sitzungsschlüssel fehlt}
+      DATA_ENCRYPTION_KEY: ${DATA_ENCRYPTION_KEY:?Datenschlüssel fehlt}
+      WEB_ORIGIN: https://${SURVEY_DOMAIN:?Öffentliche Domain fehlt}
+      PUBLIC_WEB_ORIGIN: https://${SURVEY_DOMAIN:?Öffentliche Domain fehlt}
+      TRUST_PROXY_HOPS: '1'
+      BOOTSTRAP_ADMIN_EMAIL: ${ADMIN_EMAIL:?Administratoradresse fehlt}
+      BOOTSTRAP_ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Administratorpasswort fehlt}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+    volumes:
+      - online_assets:/app/storage/assets
+      - online_exports:/app/storage/exports
+    restart: unless-stopped
+  https:
+    image: caddy:2-alpine
+    depends_on: [app]
+    ports: ['80:80', '443:443']
+    environment:
+      SURVEY_DOMAIN: ${SURVEY_DOMAIN:?Öffentliche Domain fehlt}
+      ACME_EMAIL: ${ADMIN_EMAIL:?Administratoradresse fehlt}
+    volumes:
+      - ./server/Caddyfile:/etc/caddy/Caddyfile:ro
+      - online_caddy:/data
+      - online_caddy_config:/config
+    restart: unless-stopped
+volumes:
+  online_pg:
+  online_assets:
+  online_exports:
+  online_caddy:
+  online_caddy_config:

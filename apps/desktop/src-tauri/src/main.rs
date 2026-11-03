@@ -1,5 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod storage;
+mod online;
 use tauri::Manager;
 #[tauri::command]
 async fn sync_push(server: String, token: String, payload: serde_json::Value) -> Result<serde_json::Value, String> {
@@ -19,9 +20,10 @@ fn main() {
             #[cfg(unix)]{use std::os::unix::fs::PermissionsExt;std::fs::set_permissions(&directory,std::fs::Permissions::from_mode(0o700))?;}
             app.manage(storage::initialize(&directory.join("surveystudio.db"))?);Ok(())
         })
+        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .invoke_handler(tauri::generate_handler![sync_push,storage::sql_execute,storage::sql_select,storage::sql_batch])
+        .invoke_handler(tauri::generate_handler![sync_push,online::check_online_server,online::open_online_portal,storage::sql_execute,storage::sql_select,storage::sql_batch])
         .run(tauri::generate_context!())
         .expect("SurveyStudio konnte nicht gestartet werden");
 }

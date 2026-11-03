@@ -61,6 +61,10 @@ docker compose -f docker-compose.prod.yml up -d
 
 In der verwalteten Cloud beim Imagebau zusätzlich das bereitgestellte CA-Zertifikat als Build-Secret übergeben; siehe [BETRIEB.md](docs/BETRIEB.md). Das Image enthält Weboberfläche, API, SQL-Migrationen und Schriften. Die Startanweisung führt Migrationen vor dem API-Start aus.
 
+## Öffentlicher Online-Zugang
+
+Noch kein Hosting vorhanden: Es gibt deshalb derzeit keine öffentliche Instanz. [ONLINE_BEREITSTELLUNG.md](docs/ONLINE_BEREITSTELLUNG.md) beschreibt das enthaltene HTTPS-Serverpaket mit Caddy, PostgreSQL und geschützter Erstkontoeinrichtung. Hosting und Domain werden vom Betreiber bereitgestellt. „Online-Zugang“ in der Desktop-App prüft einen eingerichteten Server und öffnet dessen Webanmeldung im Standardbrowser.
+
 ## Tests
 
 ```sh
@@ -79,7 +83,7 @@ Die Integrationstests legen ein zufälliges PostgreSQL-Schema und eigene tempor�
 
 ## Desktop
 
-Windows-x64-Vorabversion 0.4.0: [Installationsanleitung](docs/INSTALLATION_WINDOWS.md), [Fehlerkorrekturen und Buildprüfung](docs/DESKTOP_0_4_0.md). Downloadpakete werden über [GitHub Releases](https://github.com/Sarkissian198927/SurveyStudio-Pro/releases) bereitgestellt; `build-manifest.json` und SHA256-Prüfsummen ordnen sie dem geprüften Quellstand zu.
+Windows-x64-Vorabversion 0.5.0: [Installationsanleitung](docs/INSTALLATION_WINDOWS.md), [Fehlerkorrekturen und Buildprüfung](docs/DESKTOP_0_5_0.md). Downloadpakete werden über [GitHub Releases](https://github.com/Sarkissian198927/SurveyStudio-Pro/releases) bereitgestellt; `build-manifest.json` und SHA256-Prüfsummen ordnen sie dem geprüften Quellstand zu.
 
 Der Quellcode liegt unter `apps/desktop`, die echte SQLite-Domänenschicht unter `packages/desktop-store`.
 
@@ -88,9 +92,9 @@ pnpm --filter @surveystudio/desktop dev
 pnpm --filter @surveystudio/desktop exec tauri build -- --locked
 ```
 
-Benötigt werden Rust sowie die Tauri-Systemvoraussetzungen der Zielplattform. Der Rust-Code wurde unter Linux mit GTK/WebKit und Cargo-Lockfile geprüft. `.github/workflows/desktop.yml` ergänzt unter Windows einen echten Schlüsselbundtest, EXE/MSI-Build und Installations-/Fensterstarttest. Vollständige manuelle Windows-GUI-Abnahme steht separat aus.
+Benötigt werden Rust sowie die Tauri-Systemvoraussetzungen der Zielplattform. Der Rust-Code wurde unter Linux mit GTK/WebKit und Cargo-Lockfile geprüft. `.github/workflows/desktop.yml` ergänzt unter Windows einen echten Schlüsselbundtest, EXE/MSI-Build und Installations-/Fensterstarttest. Die Pipeline prüft außerdem ein Upgrade von 0.4 mit Bestandserhalt, Navigation, Umfrageerstellung, Antworten und CSV über den echten Windows-Speicherdialog sowie HTTPS-Zertifikatsprüfung und Browseröffnung. Eine vollständige manuelle Windows-Abnahme bleibt offen.
 
-**Die native Datenbank verwendet SQLCipher und einen zufälligen Schlüssel im Betriebssystem-Schlüsselbund.** Ohne verfügbaren Schlüsselbund/Schlüssel gibt es keinen Klartextfallback. Dateiverschlüsselung und Wiederöffnung wurden nativ unter Linux geprüft; der echte Schlüsselbundanbieter und die Windows-GUI noch nicht. Persönliche/pseudonyme lokale Veröffentlichungen bleiben wegen fehlender lokaler Identitätsverwaltung blockiert. Lokal sind CSV und grundlegende Auswertungen vorhanden; vollständige XLSX/PDF-Ausgabe, Sync-Pull, automatische Synchronisation, Lösch-Tombstones und Windows-Abnahme fehlen. Datenbank und Schlüssel müssen zusammen gesichert werden.
+**Die native Datenbank verwendet SQLCipher und einen zufälligen Schlüssel im Betriebssystem-Schlüsselbund.** Ohne verfügbaren Schlüsselbund/Schlüssel gibt es keinen Klartextfallback. Dateiverschlüsselung und Wiederöffnung wurden nativ unter Linux geprüft; der echte Windows-Schlüsselbundanbieter und der native GUI-Ablauf werden zusätzlich in der Windows-Pipeline geprüft. Persönliche/pseudonyme lokale Veröffentlichungen bleiben wegen fehlender lokaler Identitätsverwaltung blockiert. Lokal sind CSV und grundlegende Auswertungen vorhanden; vollständige XLSX/PDF-Ausgabe, Sync-Pull, automatische Synchronisation, Lösch-Tombstones fehlen. Datenbank und Schlüssel müssen zusammen gesichert werden.
 
 ## Noch nicht vollständig
 

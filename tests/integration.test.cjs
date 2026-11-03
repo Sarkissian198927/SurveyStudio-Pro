@@ -27,7 +27,7 @@ async function register(name) {
 function start(command,args,env) {
   const child=spawn(command,args,{cwd:root,env:{...process.env,...env},stdio:['ignore','pipe','pipe']});
   for(const stream of [child.stdout,child.stderr])stream.on('data',chunk=>logs.push(chunk.toString()));
-  child.on('exit',code=>{if(code&&!stopping)console.error('Dienst beendet ('+code+'):',logs.slice(-25).join(''));});
+  child.on('exit',code=>{if(code&&code!==143&&!stopping)console.error('Dienst beendet ('+code+'):',logs.slice(-25).join(''));});
   return child;
 }
 async function ready(url,child) {
@@ -392,17 +392,26 @@ test('Browser: Registrierung, Projekt anlegen, neu laden, abmelden und erneut an
     await page.getByLabel('Dein Name').fill('Browser Test');await page.getByLabel('E-Mail-Adresse').fill(email);await page.getByLabel('Passwort',{exact:true}).fill(password);
     await page.getByRole('button',{name:'Kostenlos starten'}).click();await page.waitForURL('**/app');
     console.log('Browser: Projektverwaltung öffnen');
-    await page.getByRole('link',{name:'Projekte und Zugriff'}).click();
+    await page.getByRole('link',{name:'Projekte',exact:true}).click();
     await page.getByLabel(/^Neues Projekt in/).fill('Browser Projekt');await page.getByRole('button',{name:'Projekt erstellen',exact:true}).click();
     await page.getByRole('status').filter({hasText:'Projekt erstellt.'}).waitFor();
     await page.reload();await page.getByLabel('Projekt',{exact:true}).selectOption({label:'Browser Projekt (owner)'});
     await page.getByRole('button',{name:'Abmelden',exact:true}).click();await page.waitForURL('**/login');
     await page.getByLabel('E-Mail-Adresse').fill(email);await page.getByLabel('Passwort',{exact:true}).fill(password);await page.getByRole('button',{name:'Anmelden',exact:true}).click();await page.waitForURL('**/app');
     console.log('Browser: Projektverwaltung öffnen');
-    await page.getByRole('link',{name:'Projekte und Zugriff'}).click();
+    await page.getByRole('link',{name:'Projekte',exact:true}).click();
     await page.getByLabel('Projekt',{exact:true}).selectOption({label:'Browser Projekt (owner)'});
     await page.setViewportSize({width:390,height:844});
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Mobile Seite darf nicht horizontal überlaufen');
     assert.deepEqual(errors,[]);
   } finally {await browser.close();}
+});
+test('Onlinebetrieb: erstes Administratorkonto, TLS-Anmeldung und neue Umfrage funktionieren ohne Entwicklungsmodus',{timeout:60000},async()=>{
+ const {provision}=require('../scripts/bootstrap-admin.cjs'),fs=require('node:fs'),https=require('node:https'),http=require('node:http');const isolated='online_'+randomUUID().replaceAll('-',''),dir=fs.mkdtempSync(path.join(require('node:os').tmpdir(),'survey-online-'));let pool,production,gateway;
+ try{await admin.query(`CREATE SCHEMA ${isolated}`);const address=new URL(process.env.DATABASE_URL);address.searchParams.set('options',`-c search_path=${isolated},public`);const env={DATABASE_URL:address.toString(),NODE_ENV:'production',COOKIE_SECURE:'true',JWT_SECRET:randomBytes(48).toString('hex'),DATA_ENCRYPTION_KEY:randomBytes(48).toString('hex'),API_PORT:'3107',SERVE_WEB:'true',TRUST_PROXY_HOPS:'1',SMTP_HOST:'',SMTP_USER:'',SMTP_PASSWORD:'',SMTP_FROM:''};const migration=spawnSync(process.execPath,['db/migrate.cjs'],{cwd:root,env:{...process.env,...env},encoding:'utf8'});assert.equal(migration.status,0,migration.stderr);pool=new Pool({connectionString:env.DATABASE_URL});const credentials='Nur-Test-'+randomBytes(20).toString('hex');assert.equal(await provision(pool,'operator@example.test',credentials),true);const original=(await pool.query('SELECT id,password_hash,verified_at FROM users')).rows[0];assert.ok(original.verified_at);assert.equal(await provision(pool,'other@example.test','Anderes-Testpasswort-12345'),false);assert.equal((await pool.query('SELECT password_hash FROM users')).rows[0].password_hash,original.password_hash);
+  const openssl=spawnSync('openssl',['req','-x509','-newkey','rsa:2048','-nodes','-keyout',path.join(dir,'key.pem'),'-out',path.join(dir,'cert.pem'),'-days','1','-subj','/CN=localhost','-addext','subjectAltName=DNS:localhost,IP:127.0.0.1'],{encoding:'utf8'});assert.equal(openssl.status,0);production=start(process.execPath,['apps/api/dist/main.js'],env);await ready('http://127.0.0.1:3107/api/v1/health',production);
+  gateway=https.createServer({key:fs.readFileSync(path.join(dir,'key.pem')),cert:fs.readFileSync(path.join(dir,'cert.pem'))},(request,response)=>{const proxy=http.request({hostname:'127.0.0.1',port:3107,path:request.url,method:request.method,headers:{...request.headers,'x-forwarded-for':'127.0.0.1','x-forwarded-proto':'https'}},remote=>{response.writeHead(remote.statusCode,remote.headers);remote.pipe(response);});proxy.on('error',()=>{response.writeHead(502);response.end();});request.pipe(proxy);});await new Promise(resolve=>gateway.listen(0,'127.0.0.1',resolve));const port=gateway.address().port;
+  const tlsCall=(route,{method='GET',body,session}={})=>new Promise((resolve,reject)=>{const request=https.request({hostname:'127.0.0.1',port,path:route,method,ca:fs.readFileSync(path.join(dir,'cert.pem')),headers:{...(body?{'Content-Type':'application/json'}:{}),...(session?{Cookie:session.cookie,'X-Survey-CSRF':session.csrfToken}:{})}},response=>{let bytes='';response.on('data',chunk=>bytes+=chunk);response.on('end',()=>resolve({status:response.statusCode,data:route.startsWith('/api/')?JSON.parse(bytes):bytes,cookie:response.headers['set-cookie']?.[0].split(';')[0],setCookie:response.headers['set-cookie']?.[0]}));});request.on('error',reject);request.end(body?JSON.stringify(body):undefined);});
+  const health=await tlsCall('/api/v1/health');assert.equal(health.status,200);assert.equal(health.data.service,'surveystudio-pro');assert.equal((await tlsCall('/login')).status,200);const login=await tlsCall('/api/v1/auth/login',{method:'POST',body:{email:'operator@example.test',password:credentials}});assert.equal(login.status,201);assert.match(login.setCookie,/Secure/);assert.match(login.setCookie,/HttpOnly/);const session={...login.data,cookie:login.cookie};const projects=await tlsCall('/api/v1/projects',{session});assert.equal(projects.status,200);assert.equal(projects.data.length,1);const created=await tlsCall('/api/v1/surveys',{method:'POST',session,body:{projectId:projects.data[0].id,title:'Online neu erstellt'}});assert.equal(created.status,201);assert.equal((await tlsCall('/api/v1/surveys/'+created.data.survey.id,{session})).data.document.metadata.title,'Online neu erstellt');
+ }finally{if(gateway)await new Promise(resolve=>gateway.close(resolve));if(production&&production.exitCode===null){production.kill('SIGTERM');await new Promise(resolve=>production.once('exit',resolve));}if(pool)await pool.end();await admin.query(`DROP SCHEMA IF EXISTS ${isolated} CASCADE`);fs.rmSync(dir,{recursive:true,force:true});}
 });

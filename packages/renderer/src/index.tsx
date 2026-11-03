@@ -35,7 +35,7 @@ export function SurveyForm({draft,preview=false,onSubmit}:Props) {
   :<form ref={form} onSubmit={submit} noValidate>
     <h1>{draft.metadata.title}</h1><h2 tabIndex={-1}>{draft.pages[page].title}</h2>
     {draft.settings.showProgress&&<div className="survey-progress"><label htmlFor="survey-progress">Seite {routeIndex+1} von {route.length}</label><progress id="survey-progress" value={routeIndex+1} max={route.length}/></div>}
-    {sorted.map((q,i)=><fieldset className="runtime-question" key={q.key} aria-invalid={!!error&&error.includes(q.label)} aria-describedby={error&&error.includes(q.label)?'survey-error':undefined}>
+    {sorted.map((q,i)=><fieldset className="runtime-question" key={q.key} data-question-type={q.type} aria-invalid={!!error&&error.includes(q.label)} aria-describedby={error&&error.includes(q.label)?'survey-error':undefined}>
       <legend className="runtime-question-label" style={{fontWeight:q.style?.bold?800:600,fontStyle:q.style?.italic?'italic':'normal',color:q.style?.color||draft.theme.textColor}}>{i+1}. {q.label} {q.required&&<span className="required" aria-label="Pflichtfrage">*</span>}</legend>
       {q.description&&<p className="question-help">{q.description}</p>}<AnswerInput q={q} value={answers[q.key]} onChange={value=>{setAnswers(old=>({...old,[q.key]:value}));setError('');}}/>
     </fieldset>)}

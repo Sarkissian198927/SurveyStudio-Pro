@@ -1,10 +1,11 @@
+import {configuredServer} from './Online';
 import { useEffect,useState } from 'react';
 import { api } from './api';
 import { AppShell } from './App';
 import { isDesktop,localStore } from './local';
 export function SyncPage(){
  const [projects,setProjects]=useState<{id:string;title:string}[]>([]);useEffect(()=>{if(!isDesktop())api<typeof projects>('/projects').then(setProjects).catch(()=>{});},[]);
- const [server,setServer]=useState(''),[token,setToken]=useState(''),[project,setProject]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[confirmed,setConfirmed]=useState(false);
+ const [server,setServer]=useState(configuredServer),[token,setToken]=useState(''),[project,setProject]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[confirmed,setConfirmed]=useState(false);
  async function sync(){setBusy(true);setMessage('');try{const store=await localStore(),{invoke}=await import('@tauri-apps/api/core');let applied=0;
  for(;;){const pending=await store.pending();if(!pending.length)break;const expected=new Set(pending.map(o=>o.operation_id));const response=await invoke<{applied:string[]}>('sync_push',{server,token,payload:{targetProjectId:project,operations:pending.map(o=>({operationId:o.operation_id,kind:o.kind,id:o.entity_id,document:JSON.parse(o.document),baseRevision:o.base_revision}))}});
  if(!Array.isArray(response.applied)||response.applied.length!==pending.length||new Set(response.applied).size!==pending.length||response.applied.some(id=>!expected.has(id)))throw Error('Unvollständige Serverbestätigung. Die Warteschlange bleibt erhalten.');await store.acknowledge(response.applied);applied+=response.applied.length;setMessage(`${applied} Vorgänge übertragen …`);}

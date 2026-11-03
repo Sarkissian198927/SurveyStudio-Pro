@@ -14,7 +14,7 @@ export class LocalStore {
  private insertOperation(kind:string,id:string,value:Record<string,unknown>):SqlOperation{return {sql:'INSERT INTO entities(id,kind,document,revision) VALUES(?,?,?,?)',values:[id,kind,JSON.stringify({...value,id}),Number(value.revision)||1]};}
  private updateOperation(kind:string,id:string,value:Record<string,unknown>,expected:number):SqlOperation{return {sql:'UPDATE entities SET document=?,revision=revision+1 WHERE kind=? AND id=? AND revision=?',values:[JSON.stringify(value),kind,id,expected],expectedChanges:1};}
  private title(value:unknown){if(typeof value!=='string'||!value.trim()||value.trim().length>160)throw Error('Titel muss zwischen 1 und 160 Zeichen enthalten.');return value.trim();}
- private async version(surveyId:string,versionId?:unknown){const versions=(await this.entities('version')).filter(v=>v.surveyId===surveyId);const selected=typeof versionId==='string'&&versionId?versions.find(v=>v.id===versionId):versions[versions.length-1];if(versionId&&!selected)throw Error('Fragebogenversion nicht gefunden.');return selected;}
+ private async version(surveyId:string,versionId?:unknown){if(versionId!=null&&typeof versionId!=='string')throw Error('Ungültige Fragebogenversion.');const versions=(await this.entities('version')).filter(v=>v.surveyId===surveyId);const selected=typeof versionId==='string'&&versionId?versions.find(v=>v.id===versionId):versions[versions.length-1];if(versionId&&!selected)throw Error('Fragebogenversion nicht gefunden.');return selected;}
  private async records(versionId:string){return (await this.db.select<{document:string}[]>("SELECT document FROM responses WHERE json_extract(document,'$.versionId')=? ORDER BY rowid",[versionId])).map(r=>JSON.parse(r.document));}
  async initialize(){
   for(const sql of [
@@ -45,11 +45,11 @@ export class LocalStore {
  async request(path:string,method='GET',body:Record<string,unknown>={}):Promise<unknown>{
   const [route,query='']=path.split('?'),parts=route.split('/').filter(Boolean),[group,id,action]=parts;
   if(group==='auth'){if(id==='me'||id==='login')return {user:await this.get(this.userId),csrfToken:'local'};if(id==='logout')return {ok:true};throw Error('Kontoverifikation und Mail benötigen die Webinstanz.');}
-  if(group==='organizations'){if(!id)return method==='GET'?this.entities('organization'):this.insert('organization',crypto.randomUUID(),{name:String(body.name),role:'owner'});if(action==='members')return [{...await this.get(this.userId),display_name:'Lokales Gerät',role:'owner'}];}
+  if(group==='organizations'){if(!id)return method==='GET'?this.entities('organization'):this.insert('organization',crypto.randomUUID(),{name:this.title(body.name),role:'owner'});if(action==='members'){if(method!=='GET')throw Error('Teamkonten werden über den Online-Zugang verwaltet.');return [{...await this.get(this.userId),display_name:'Lokales Gerät',role:'owner'}];}}
   if(group==='projects'){
-   if(!id)return method==='GET'?this.entities('project'):this.insert('project',crypto.randomUUID(),{organization_id:body.organizationId||this.organizationId,title:String(body.title),role:'owner'});
+   if(!id){if(method==='GET')return this.entities('project');const organizationId=String(body.organizationId||this.organizationId);await this.get(organizationId,'organization');const parent=body.parentProjectId?await this.get(String(body.parentProjectId),'project'):null;if(parent&&parent.organization_id!==organizationId)throw Error('Übergeordnetes Projekt gehört zu einem anderen Arbeitsbereich.');return this.insert('project',crypto.randomUUID(),{organization_id:organizationId,parent_project_id:parent?.id||null,title:this.title(body.title),role:'owner'});}
    if(action==='members'){if(method!=='GET')throw Error('Lokale Berechtigungen werden über das Betriebssystem verwaltet.');return [{...await this.get(this.userId),display_name:'Lokales Gerät',role:'owner'}];}
-   const p=await this.get(id,'project');if(method==='PATCH'){const entity=await this.db.select<Entity[]>('SELECT revision FROM entities WHERE id=?',[id]);return this.update('project',id,{...p,title:String(body.title)},entity[0].revision);}return p;
+   const p=await this.get(id,'project');if(method==='PATCH'){const entity=await this.db.select<Entity[]>('SELECT revision FROM entities WHERE id=?',[id]);return this.update('project',id,{...p,title:this.title(body.title)},entity[0].revision);}return p;
   }
   if(group==='public'&&id==='s'){
    const pub=(await this.entities('publication')).find(p=>p.slug===action);if(!pub)throw Error('Lokale Umfrage nicht gefunden.');

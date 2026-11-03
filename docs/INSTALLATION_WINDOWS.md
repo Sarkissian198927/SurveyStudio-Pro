@@ -1,4 +1,4 @@
-# SurveyStudio Pro 0.4.0 – Windows x64
+# SurveyStudio Pro 0.5.0 – Windows x64
 
 Vorabversion für Windows 10/11 mit 64 Bit. Das Paket ist nicht digital signiert. Windows kann deshalb einen Hinweis auf einen unbekannten Herausgeber anzeigen. Die Dateien werden direkt aus dem im Buildmanifest angegebenen GitHub-Commit gebaut; SHA256-Prüfsummen liegen bei.
 
@@ -10,12 +10,20 @@ Microsoft Edge WebView2 wird benötigt. Auf aktuellen Windows-Systemen ist es ü
 
 ## Erster Fragebogen
 
-1. SurveyStudio Pro starten, einen Umfragetitel eingeben und „Erstellen“ wählen.
+1. SurveyStudio Pro starten, „Umfrage erstellen“ öffnen, Titel und Projekt wählen und „Umfrage erstellen“ wählen.
 2. Fragen und mehrere Seiten anlegen; unter „Design“ Hintergrundfarbe, Verlauf, Muster oder ein Bild wählen. Speichern.
 3. „Lokal freigeben“ wählen und den lokalen Fragebogen öffnen. Antworten werden verschlüsselt auf diesem Gerät gespeichert.
 4. In der Übersicht die Auswertung öffnen. Eine veröffentlichte Version auswählen und CSV oder ein Diagramm als PNG/SVG über den Speicherdialog sichern.
 
 Eine lokale Freigabe ist kein öffentlicher Internetlink. Für andere Geräte eine eigene Webinstanz betreiben, dort einen Gerätezugang erzeugen, in der Desktop-App manuell synchronisieren und anschließend die Webpublikation aktivieren.
+
+## Online-Zugang
+
+Es ist noch kein Hosting eingerichtet. Die App enthält deshalb keine vorgetäuschte öffentliche Serveradresse. Das Serverpaket dieses Releases und `ONLINE_BEREITSTELLUNG.md` helfen beim Betrieb auf einem eigenen Server mit Domain und HTTPS. Nach dessen Einrichtung in der App „Online-Zugang“ öffnen, die HTTPS-Adresse prüfen und „Online-Anmeldung öffnen“ wählen. Der Standardbrowser öffnet die Webversion. Gemeinsame Projekte und Teamzugriffe werden dort verwaltet.
+
+## Upgrade von 0.4
+
+Die Anwendung verwendet dieselbe App-Kennung und denselben lokalen Datenbankpfad. Das Setup kann die bestehende Installation aktualisieren. Die Pipeline prüft dies mit einer in Version 0.4 angelegten verschlüsselten Umfrage. Schlüssel und Windows-Benutzerprofil müssen erhalten bleiben.
 
 ## Daten und Grenzen
 
