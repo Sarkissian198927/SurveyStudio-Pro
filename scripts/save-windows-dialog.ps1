@@ -38,7 +38,9 @@ public static class SurveySaveDialog {
     }
    }
    if(edit==IntPtr.Zero||save==IntPtr.Zero)continue;
+   Console.WriteLine("Selected filename edit id="+GetDlgCtrlID(edit)+" parent="+GetDlgCtrlID(GetParent(edit))+" / "+ClassName(GetParent(edit))+" before="+Title(edit));
    SendMessage(edit,0x000C,IntPtr.Zero,path); // WM_SETTEXT
+   Console.WriteLine("Filename edit after="+Title(edit));
    if(!PostMessage(save,0x00F5,IntPtr.Zero,IntPtr.Zero))throw new Exception("Native Save button could not be invoked.");
    return true;
   }
