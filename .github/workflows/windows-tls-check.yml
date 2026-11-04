@@ -33,7 +33,7 @@ jobs:
           $file=Join-Path $env:RUNNER_TEMP 'surveystudio-save-fixture.csv'
           $dialog=Start-Process powershell.exe -ArgumentList '-STA -NoProfile -File scripts/windows-save-fixture.ps1' -PassThru
           try {
-            ./scripts/save-windows-dialog.ps1 -AppProcessId $dialog.Id -FilePath $file
+            powershell.exe -NoProfile -File scripts/save-windows-dialog.ps1 -AppProcessId $dialog.Id -FilePath $file
             if($LASTEXITCODE -ne 0){throw 'Save automation failed.'}
             if(!$dialog.WaitForExit(10000)){throw 'Save dialog did not close.'}
             if($dialog.ExitCode -ne 0){throw 'Save fixture failed.'}
