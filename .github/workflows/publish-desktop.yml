@@ -1,13 +1,13 @@
 name: Publish verified Windows installers
 on:
   push:
-    branches: ['release/publish-desktop-0.4.0']
+    branches: ['release/publish-desktop-0.5.0']
   workflow_dispatch:
 permissions:
   contents: write
   actions: read
 concurrency:
-  group: publish-desktop-0.4.0
+  group: publish-desktop-0.5.0
   cancel-in-progress: false
 jobs:
   publish:
@@ -15,9 +15,9 @@ jobs:
     timeout-minutes: 10
     env:
       GH_TOKEN: ${{ github.token }}
-      BUILD_RUN_ID: '41695684178'
-      BUILD_COMMIT: '350d2ec38bda9f87ea6fcc3a71f1327dae4144a1'
-      RELEASE_TAG: v0.4.0-preview.1
+      BUILD_RUN_ID: '41746708663'
+      BUILD_COMMIT: '96742a71e4a6d874874939d7d1848164a2c69f4a'
+      RELEASE_TAG: v0.5.0-preview.1
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,8 +26,14 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           github-token: ${{ github.token }}
-          run-id: '41695684178'
-          name: SurveyStudio-Pro-0.4.0-Windows-x64
+          run-id: '41746708663'
+          name: SurveyStudio-Pro-0.5.0-Windows-x64
           path: artifacts/raw
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: '41746708663'
+          name: SurveyStudio-Pro-0.5.0-Server
+          path: artifacts/raw-server
       - name: Verify source, checksums and files; upload and publish release
         run: node scripts/publish-desktop.cjs
