@@ -5,6 +5,7 @@ $ErrorActionPreference='Stop'
 Add-Type -TypeDefinition @'
 using System;
 using System.Text;
+using System.IO;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 public static class SurveySaveDialog {
@@ -18,10 +19,13 @@ public static class SurveySaveDialog {
  [DllImport("user32.dll")] static extern IntPtr GetParent(IntPtr hwnd);
  [DllImport("user32.dll")] static extern IntPtr GetWindow(IntPtr hwnd,uint command);
  [DllImport("user32.dll",CharSet=CharSet.Unicode)] static extern IntPtr SendMessage(IntPtr hwnd,uint message,IntPtr wparam,string value);
+ [DllImport("user32.dll",EntryPoint="SendMessageW",CharSet=CharSet.Unicode)] static extern IntPtr ReadMessage(IntPtr hwnd,uint message,IntPtr wparam,StringBuilder value);
+ [DllImport("user32.dll",EntryPoint="SendMessageW")] static extern IntPtr ValueMessage(IntPtr hwnd,uint message,IntPtr wparam,IntPtr lparam);
  [DllImport("user32.dll")] static extern bool PostMessage(IntPtr hwnd,uint message,IntPtr wparam,IntPtr lparam);
  static uint ProcessId(IntPtr hwnd){uint pid;GetWindowThreadProcessId(hwnd,out pid);return pid;}
  static string ClassName(IntPtr hwnd){var text=new StringBuilder(256);GetClassName(hwnd,text,text.Capacity);return text.ToString();}
  static string Title(IntPtr hwnd){var text=new StringBuilder(512);GetWindowText(hwnd,text,text.Capacity);return text.ToString();}
+ static string EditText(IntPtr hwnd){var text=new StringBuilder(4096);ReadMessage(hwnd,0x000D,new IntPtr(text.Capacity),text);return text.ToString();}
  static List<IntPtr> Windows(){var result=new List<IntPtr>();EnumWindows(delegate(IntPtr h,IntPtr p){result.Add(h);return true;},IntPtr.Zero);return result;}
  static List<IntPtr> Children(IntPtr parent){var result=new List<IntPtr>();EnumChildWindows(parent,delegate(IntPtr h,IntPtr p){result.Add(h);return true;},IntPtr.Zero);return result;}
  static bool OwnedBy(IntPtr hwnd,uint pid){return ProcessId(hwnd)==pid||ProcessId(GetWindow(hwnd,4))==pid;}
@@ -33,14 +37,18 @@ public static class SurveySaveDialog {
     string cls=ClassName(child);int id=GetDlgCtrlID(child);
     if(cls=="Button"&&id==1)save=child;
     if(cls=="Edit"){
-     var parent=GetParent(child);int score=GetDlgCtrlID(parent)==1148?10:(id==1001?5:0);
+     var parent=GetParent(child);string value=EditText(child);int score=value.EndsWith(Path.GetExtension(path),StringComparison.OrdinalIgnoreCase)?50:(GetDlgCtrlID(parent)==1148?10:(id==1001?5:0));
      if(score>priority){edit=child;priority=score;}
     }
    }
    if(edit==IntPtr.Zero||save==IntPtr.Zero)continue;
-   Console.WriteLine("Selected filename edit id="+GetDlgCtrlID(edit)+" parent="+GetDlgCtrlID(GetParent(edit))+" / "+ClassName(GetParent(edit))+" before="+Title(edit));
+   Console.WriteLine("Selected filename edit id="+GetDlgCtrlID(edit)+" parent="+GetDlgCtrlID(GetParent(edit))+" / "+ClassName(GetParent(edit))+" before="+EditText(edit));
    SendMessage(edit,0x000C,IntPtr.Zero,path); // WM_SETTEXT
-   Console.WriteLine("Filename edit after="+Title(edit));
+   ValueMessage(edit,0x00B1,new IntPtr(-1),new IntPtr(-1)); // EM_SETSEL: caret at end
+   ValueMessage(edit,0x0102,new IntPtr(32),IntPtr.Zero); // WM_CHAR and backspace notify the dialog model
+   ValueMessage(edit,0x0102,new IntPtr(8),IntPtr.Zero);
+   if(EditText(edit)!=path)throw new Exception("Filename edit did not accept the requested path.");
+   Console.WriteLine("Filename edit after="+EditText(edit));
    if(!PostMessage(save,0x00F5,IntPtr.Zero,IntPtr.Zero))throw new Exception("Native Save button could not be invoked.");
    return true;
   }
