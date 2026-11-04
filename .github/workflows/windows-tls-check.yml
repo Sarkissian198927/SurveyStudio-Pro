@@ -1,0 +1,22 @@
+name: Windows TLS fixture check
+on:
+  push:
+    branches: ['release/windows-tls-0.5.0']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tls:
+    runs-on: windows-2022
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare trusted local TLS fixture
+        timeout-minutes: 2
+        shell: powershell
+        run: ./scripts/prepare-windows-tls.ps1
+      - name: Remove test certificates
+        if: always()
+        timeout-minutes: 2
+        shell: powershell
+        run: ./scripts/prepare-windows-tls.ps1 -Cleanup

@@ -24,8 +24,9 @@ $publicRoot=Join-Path $testDir 'root.cer';Export-Certificate -Cert $ca -FilePath
 # Hosted Windows runners are disposable administrators. The CurrentUser protected
 # root store requires a desktop confirmation even with -f; machine Root is unattended.
 Write-Output 'Trusting the short-lived CA in the disposable runner machine store.'
-certutil.exe -f -silent -addstore Root $publicRoot | Out-Null
-if($LASTEXITCODE -ne 0){throw 'Test root certificate could not be installed.'}
+$importOutput=certutil.exe -f -addstore Root $publicRoot 2>&1
+if($LASTEXITCODE -ne 0){throw ('Test root certificate import failed: '+($importOutput -join "`n"))}
+if(!(Test-Path "Cert:\LocalMachine\Root\$($ca.Thumbprint)")){throw 'Test root certificate missing from machine store.'}
 Write-Output 'Creating localhost server certificate.'
 $leaf=New-SelfSignedCertificate -DnsName localhost -CertStoreLocation Cert:\CurrentUser\My -Signer $ca -KeyAlgorithm RSA -KeyLength 2048 -KeyExportPolicy Exportable -NotAfter (Get-Date).AddDays(1)
 Export-TestEnvironment 'ONLINE_TEST_LEAF_THUMBPRINT' $leaf.Thumbprint
