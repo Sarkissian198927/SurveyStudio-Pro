@@ -38,7 +38,7 @@ jobs:
       - name: Validate Windows automation scripts
         shell: pwsh
         run: |
-          foreach ($file in @('scripts/smoke-windows.ps1','scripts/save-windows-dialog.ps1','scripts/prepare-windows-tls.ps1')) {
+          foreach ($file in @('scripts/smoke-windows.ps1','scripts/save-windows-dialog.ps1','scripts/prepare-windows-tls.ps1','scripts/windows-save-fixture.ps1')) {
             $tokens=$null; $parseErrors=$null
             [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file),[ref]$tokens,[ref]$parseErrors) | Out-Null
             if ($parseErrors.Count) { throw ($parseErrors | Out-String) }

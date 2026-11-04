@@ -20,3 +20,27 @@ jobs:
         timeout-minutes: 2
         shell: powershell
         run: ./scripts/prepare-windows-tls.ps1 -Cleanup
+  dialog:
+    runs-on: windows-2022
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exercise actual native Windows Save dialog
+        timeout-minutes: 2
+        shell: powershell
+        run: |
+          $ErrorActionPreference='Stop'
+          $file=Join-Path $env:RUNNER_TEMP 'surveystudio-save-fixture.csv'
+          $env:SAVE_FIXTURE_RESULT=Join-Path $env:RUNNER_TEMP 'surveystudio-save-selected-path.txt'
+          $dialog=Start-Process powershell.exe -ArgumentList '-STA -NoProfile -File scripts/windows-save-fixture.ps1' -PassThru
+          try {
+            powershell.exe -NoProfile -File scripts/save-windows-dialog.ps1 -AppProcessId $dialog.Id -FilePath $file
+            if($LASTEXITCODE -ne 0){throw 'Save automation failed.'}
+            if(!$dialog.WaitForExit(10000)){throw 'Save dialog did not close.'}
+            if($dialog.ExitCode -ne 0){throw 'Save fixture failed.'}
+            $selected=[System.IO.File]::ReadAllText($env:SAVE_FIXTURE_RESULT)
+            Write-Output ('Actual selected file: '+$selected)
+            if($selected -ne $file){throw 'Save dialog selected a different filename.'}
+            if([System.IO.File]::ReadAllText($file) -ne 'native-save-fixture'){throw 'Saved content mismatch.'}
+            Write-Output 'Real Windows Save dialog and file contents verified.'
+          }finally{if(!$dialog.HasExited){$dialog.Kill()}}
