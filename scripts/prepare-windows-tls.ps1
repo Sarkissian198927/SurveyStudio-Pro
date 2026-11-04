@@ -7,6 +7,7 @@ if($Cleanup){
   $thumbprint=[Environment]::GetEnvironmentVariable($name)
   if($thumbprint -match '^[A-Fa-f0-9]{40}$'){
    foreach($store in @('My','Root')){Remove-Item "Cert:\CurrentUser\$store\$thumbprint" -Force -Confirm:$false -ErrorAction SilentlyContinue}
+   Remove-Item "Cert:\LocalMachine\Root\$thumbprint" -Force -Confirm:$false -ErrorAction SilentlyContinue
   }
  }
  return
@@ -20,8 +21,10 @@ Write-Output 'Creating short-lived local TLS test authority.'
 $ca=New-SelfSignedCertificate -Type Custom -Subject "CN=SurveyStudio CI Root $([guid]::NewGuid())" -CertStoreLocation Cert:\CurrentUser\My -KeyUsage CertSign,CRLSign,DigitalSignature -KeyAlgorithm RSA -KeyLength 2048 -KeyExportPolicy Exportable -TextExtension @('2.5.29.19={critical}{text}ca=1&pathlength=0') -NotAfter (Get-Date).AddDays(2)
 Export-TestEnvironment 'ONLINE_TEST_CA_THUMBPRINT' $ca.Thumbprint
 $publicRoot=Join-Path $testDir 'root.cer';Export-Certificate -Cert $ca -FilePath $publicRoot | Out-Null
-Write-Output 'Trusting only the local test authority without an interactive import wizard.'
-certutil.exe -user -f -addstore Root $publicRoot | Out-Null
+# Hosted Windows runners are disposable administrators. The CurrentUser protected
+# root store requires a desktop confirmation even with -f; machine Root is unattended.
+Write-Output 'Trusting the short-lived CA in the disposable runner machine store.'
+certutil.exe -f -silent -addstore Root $publicRoot | Out-Null
 if($LASTEXITCODE -ne 0){throw 'Test root certificate could not be installed.'}
 Write-Output 'Creating localhost server certificate.'
 $leaf=New-SelfSignedCertificate -DnsName localhost -CertStoreLocation Cert:\CurrentUser\My -Signer $ca -KeyAlgorithm RSA -KeyLength 2048 -KeyExportPolicy Exportable -NotAfter (Get-Date).AddDays(1)
